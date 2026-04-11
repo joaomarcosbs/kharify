@@ -1,0 +1,26 @@
+src/
+├── core/                         # Lógica global e compartilhada
+│   ├── domain/                   # Entidades globais e Value Objects (ex: Money)
+│   ├── infrastructure/           # Implementações globais (Prisma Service, RLS, Audit Log)
+│   └── decorators/               # Decoradores customizados (ex: @CurrentUser, @Organization)
+│
+├── modules/                      # Módulos de domínio do negócio
+│   ├── organization/             # Gestão de famílias e MEIs
+│   ├── cashflow/                 # Transações, Contas e Categorias
+│   └── debt/                     # Módulo de Dívidas e Simuladores
+│       ├── domain/               # Camada 1: Regras de Negócio Puras
+│       │   ├── entities/         # Entidade Debt (com métodos de cálculo)
+│       │   ├── repositories/     # Interfaces de repositório (Ports)
+│       │   └── value-objects/    # Tipos específicos (InterestRate, Installment)
+│       │
+│       ├── application/          # Camada 2: Casos de Uso (Orquestração)
+│       │   ├── use-cases/        # ex: SimulateEarlyPayoffUseCase.ts
+│       │   └── dto/              # Data Transfer Objects (Input/Output)
+│       │
+│       └── infrastructure/       # Camada 3: Adaptadores Externos
+│           ├── persistence/      # Implementação Prisma (Adapters)
+│           ├── controllers/      # Handlers HTTP do NestJS
+│           └── mappers/          # Conversão Prisma <-> Domain Entity
+│
+├── main.ts                       # Entry point da aplicação
+└── app.module.ts                 # Orquestrador de módulos do NestJS
