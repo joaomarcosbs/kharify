@@ -1,0 +1,300 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ============================================
+// ENUMS
+// ============================================
+
+enum AuthProvider {
+  email
+  google
+  facebook
+  apple
+}
+
+enum OrganizationType {
+  familia
+  mei
+  pme
+}
+
+enum UserRole {
+  owner
+  gestor
+  membro
+}
+
+enum AccountType {
+  conta
+  carteira
+  cartao
+  corretora
+}
+
+enum CategoryKind {
+  receita
+  despesa
+}
+
+enum CategoryGroupType {
+  essencial
+  necessario
+  superfluo
+}
+
+enum CostCenterType {
+  pessoa
+  projeto
+  area
+}
+
+enum BillType {
+  pagar
+  receber
+}
+
+enum BillStatus {
+  aberta
+  parcial
+  paga
+  atrasada
+}
+
+enum BillRecurrence {
+  nenhuma
+  mensal
+  anual
+}
+
+enum TransactionType {
+  entrada
+  saida
+  transferencia
+}
+
+enum TransactionOrigin {
+  manual
+  open_finance
+  recorrente
+}
+
+enum DebtStatus {
+  ativa
+  quitada
+}
+
+enum AuditAction {
+  INSERT
+  UPDATE
+  DELETE
+}
+
+// ============================================
+// MODELS
+// ============================================
+
+model User {
+  id           String   @id @default(uuid()) @db.Uuid
+  name         String
+  email        String   @unique
+  passwordHash String?  @map("password_hash")
+  
+  provider     AuthProvider @default(email)
+  googleId     String?      @unique @map("google_id")
+  facebookId   String?      @unique @map("facebook_id")
+  appleId      String?      @unique @map("apple_id")
+  
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  roles     UserOrganizationRole[]
+  auditLogs AuditLog[]
+
+  @@map("users")
+}
+
+model Organization {
+  id        String             @id @default(uuid()) @db.Uuid
+  name      String
+  type      OrganizationType
+  createdAt DateTime           @default(now()) @map("created_at") @db.Timestamptz
+
+  users        UserOrganizationRole[]
+  accounts     Account[]
+  categories   Category[]
+  costCenters  CostCenter[]
+  bills        Bill[]
+  transactions Transaction[]
+  debts        Debt[]
+  auditLogs    AuditLog[]
+
+  @@map("organizations")
+}
+
+model UserOrganizationRole {
+  userId         String   @map("user_id") @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  role           UserRole
+  
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@id([userId, organizationId])
+  @@map("user_organization_roles")
+}
+
+model Account {
+  id                  String      @id @default(uuid()) @db.Uuid
+  organizationId      String      @map("organization_id") @db.Uuid
+  name                String
+  type                AccountType
+  initialBalance      Decimal     @default(0) @map("initial_balance") @db.Decimal(18, 2)
+  initialBalanceDate  DateTime    @default(now()) @map("initial_balance_date") @db.Date
+  createdAt           DateTime    @default(now()) @map("created_at") @db.Timestamptz
+
+  organization Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  bills        Bill[]
+  transactions Transaction[] @relation("AccountSource")
+  destTransac  Transaction[] @relation("AccountDest")
+  debts        Debt[]
+
+  @@map("accounts")
+  @@index([organizationId])
+}
+
+model Category {
+  id             String            @id @default(uuid()) @db.Uuid
+  organizationId String            @map("organization_id") @db.Uuid
+  name           String
+  kind           CategoryKind
+  groupType      CategoryGroupType @map("group_type")
+  createdAt      DateTime          @default(now()) @map("created_at") @db.Timestamptz
+
+  organization Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  bills        Bill[]
+  transactions Transaction[]
+
+  @@map("categories")
+  @@index([organizationId])
+}
+
+model CostCenter {
+  id             String         @id @default(uuid()) @db.Uuid
+  organizationId String         @map("organization_id") @db.Uuid
+  name           String
+  type           CostCenterType
+  createdAt      DateTime       @default(now()) @map("created_at") @db.Timestamptz
+
+  organization Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  bills        Bill[]
+  transactions Transaction[]
+
+  @@map("cost_centers")
+  @@index([organizationId])
+}
+
+model Bill {
+  id             String         @id @default(uuid()) @db.Uuid
+  organizationId String         @map("organization_id") @db.Uuid
+  type           BillType
+  accountId      String?        @map("account_id") @db.Uuid
+  categoryId     String?        @map("category_id") @db.Uuid
+  costCenterId   String?        @map("cost_center_id") @db.Uuid
+  amount         Decimal        @db.Decimal(18, 2)
+  dueDate        DateTime       @map("due_date") @db.Date
+  status         BillStatus
+  recurrence     BillRecurrence @default(nenhuma)
+  description    String?
+  createdAt      DateTime       @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime       @updatedAt @map("updated_at") @db.Timestamptz
+
+  organization Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  account      Account?      @relation(fields: [accountId], references: [id], onDelete: SetNull)
+  category     Category?     @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  costCenter   CostCenter?   @relation(fields: [costCenterId], references: [id], onDelete: SetNull)
+  transactions Transaction[]
+
+  @@map("bills")
+  @@index([organizationId, dueDate])
+  @@index([organizationId, status])
+}
+
+model Transaction {
+  id              String            @id @default(uuid()) @db.Uuid
+  organizationId  String            @map("organization_id") @db.Uuid
+  type            TransactionType
+  accountId       String            @map("account_id") @db.Uuid
+  accountIdDest   String?           @map("account_id_dest") @db.Uuid
+  categoryId      String?           @map("category_id") @db.Uuid
+  costCenterId    String?           @map("cost_center_id") @db.Uuid
+  billId          String?           @map("bill_id") @db.Uuid
+  debtId          String?           @map("debt_id") @db.Uuid
+  amount          Decimal           @db.Decimal(18, 2)
+  date            DateTime          @db.Date
+  description     String?
+  origin          TransactionOrigin @default(manual)
+  createdAt       DateTime          @default(now()) @map("created_at") @db.Timestamptz
+
+  organization  Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  account       Account      @relation("AccountSource", fields: [accountId], references: [id], onDelete: Restrict)
+  accountDest   Account?     @relation("AccountDest", fields: [accountIdDest], references: [id], onDelete: Restrict)
+  category      Category?    @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  costCenter    CostCenter?  @relation(fields: [costCenterId], references: [id], onDelete: SetNull)
+  bill          Bill?        @relation(fields: [billId], references: [id], onDelete: SetNull)
+  debt          Debt?        @relation(fields: [debtId], references: [id], onDelete: SetNull)
+
+  @@map("transactions")
+  @@index([organizationId, date])
+  @@index([accountId, date])
+  @@index([billId])
+  @@index([debtId])
+}
+
+model Debt {
+  id                String      @id @default(uuid()) @db.Uuid
+  organizationId    String      @map("organization_id") @db.Uuid
+  name              String
+  accountId         String?     @map("account_id") @db.Uuid
+  originalAmount    Decimal     @map("original_amount") @db.Decimal(18, 2)
+  interestRateMonth Decimal?    @map("interest_rate_month") @db.Decimal(9, 6)
+  totalInstallments Int?        @map("total_installments")
+  installmentAmount Decimal?    @map("installment_amount") @db.Decimal(18, 2)
+  startDate         DateTime    @map("start_date") @db.Date
+  status            DebtStatus
+  createdAt         DateTime    @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt         DateTime    @updatedAt @map("updated_at") @db.Timestamptz
+
+  organization Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  account      Account?      @relation(fields: [accountId], references: [id], onDelete: SetNull)
+  transactions Transaction[]
+
+  @@map("debts")
+  @@index([organizationId, status])
+}
+
+model AuditLog {
+  id             String      @id @default(uuid()) @db.Uuid
+  organizationId String      @map("organization_id") @db.Uuid
+  userId         String?     @map("user_id") @db.Uuid
+  tableName      String      @map("table_name")
+  action         AuditAction
+  oldData        Json?       @map("old_data")
+  newData        Json?       @map("new_data")
+  createdAt      DateTime    @default(now()) @map("created_at") @db.Timestamptz
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@map("audit_logs")
+  @@index([organizationId, createdAt])
+  @@index([tableName, createdAt])
+}
