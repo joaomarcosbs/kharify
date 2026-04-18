@@ -1,0 +1,44 @@
+import type { Account } from '@/types/entities'
+
+export const mockAccounts: Account[] = [
+  {
+    id: 'acc-001',
+    organizationId: 'org-001',
+    name: 'Nubank',
+    type: 'conta',
+    initialBalance: 3500.00,
+    initialBalanceDate: '2025-01-01',
+    runtimeBalance: 8245.67,
+    createdAt: '2025-01-01T00:00:00Z',
+  },
+  {
+    id: 'acc-002',
+    organizationId: 'org-001',
+    name: 'Carteira Física',
+    type: 'carteira',
+    initialBalance: 200.00,
+    initialBalanceDate: '2025-01-01',
+    runtimeBalance: 385.00,
+    createdAt: '2025-01-01T00:00:00Z',
+  },
+  {
+    id: 'acc-003',
+    organizationId: 'org-001',
+    name: 'Inter',
+    type: 'cartao',
+    initialBalance: 0,
+    initialBalanceDate: '2025-02-10',
+    runtimeBalance: -1430.50,
+    createdAt: '2025-02-10T00:00:00Z',
+  },
+  {
+    id: 'acc-004',
+    organizationId: 'org-001',
+    name: 'XP Investimentos',
+    type: 'corretora',
+    initialBalance: 15000.00,
+    initialBalanceDate: '2025-01-15',
+    runtimeBalance: 16780.30,
+    createdAt: '2025-01-15T00:00:00Z',
+  },
+]

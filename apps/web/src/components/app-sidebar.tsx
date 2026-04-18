@@ -1,10 +1,17 @@
 import * as React from "react"
 import {
-  Calculator,
+  ArrowDownLeft,
+  ArrowLeftRight,
+  ArrowUpRight,
+  Building2,
   ChevronRight,
-  FileText,
   Home,
+  Landmark,
+  LogOut,
   Settings,
+  TrendingDown,
+  User,
+  UserPlus,
 } from "lucide-react"
 
 import {
@@ -18,12 +25,12 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarSeparator,
 } from "@/components/ui/sidebar"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -32,23 +39,33 @@ const data = {
   navMain: [
     {
       title: "Visão Geral",
-      url: "/dashboard",
+      url: "/home",
       icon: Home,
     },
     {
-      title: "Gestão Financeira",
-      url: "/dashboard/financeiro",
-      icon: Calculator,
+      title: "Contas Bancárias",
+      url: "/accounts",
+      icon: Landmark,
     },
     {
-      title: "Relatórios",
-      url: "/dashboard/relatorios",
-      icon: FileText,
+      title: "Transações",
+      url: "/transactions",
+      icon: ArrowLeftRight,
     },
     {
-      title: "Configurações",
-      url: "/dashboard/config",
-      icon: Settings,
+      title: "Entradas Fixas",
+      url: "/fixed-income",
+      icon: ArrowDownLeft,
+    },
+    {
+      title: "Saídas Fixas",
+      url: "/fixed-expenses",
+      icon: ArrowUpRight,
+    },
+    {
+      title: "Dívidas",
+      url: "/debts",
+      icon: TrendingDown,
     },
   ],
 }
@@ -65,11 +82,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </span>
       </SidebarHeader>
 
-
-
       <SidebarContent>
+        {/* Navegação principal */}
         <SidebarGroup>
-          <SidebarGroupLabel className="group-data-[collapsible=icon]:opacity-0 group-data-[collapsible=icon]:!mt-0 transition-opacity duration-200">Plataforma</SidebarGroupLabel>
+          <SidebarGroupLabel className="group-data-[collapsible=icon]:opacity-0 group-data-[collapsible=icon]:mt-0! transition-opacity duration-200">Plataforma</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu className="gap-1 mt-2">
               {data.navMain.map((item) => (
@@ -88,6 +104,23 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
+        {/* Configurações — acima do footer */}
+        <SidebarGroup className="mt-auto">
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  tooltip="Configurações"
+                  render={<a href="/settings" />}
+                >
+                  <Settings />
+                  <span className="truncate">Configurações</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
       </SidebarContent>
 
       <SidebarFooter>
@@ -101,11 +134,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 />
               }>
                 <Avatar className="h-8 w-8 rounded-lg shrink-0">
-                  <AvatarImage src="/avatars/john.jpg" alt="John Doe" />
-                  <AvatarFallback className="rounded-lg bg-primary/10 text-primary">JD</AvatarFallback>
+                  <AvatarImage src="/avatars/john.jpg" alt="João Marcos" />
+                  <AvatarFallback className="rounded-lg bg-primary/10 text-primary">JM</AvatarFallback>
                 </Avatar>
                 <div className="flex flex-1 flex-col text-left text-sm leading-tight overflow-hidden">
-                  <span className="truncate font-semibold text-foreground">John Doe</span>
+                  <span className="truncate font-semibold text-foreground">João Marcos</span>
                   <span className="truncate text-xs text-muted-foreground">Admin</span>
                 </div>
                 <ChevronRight className="ml-auto size-4 text-muted-foreground shrink-0" />
@@ -116,7 +149,23 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 align="end"
                 sideOffset={4}
               >
-                <DropdownMenuItem className="cursor-pointer">Sair da Conta</DropdownMenuItem>
+                <DropdownMenuItem className="cursor-pointer gap-2" render={<a href="/settings/profile" />}>
+                  <User className="size-4" />
+                  Meu Perfil
+                </DropdownMenuItem>
+                <DropdownMenuItem className="cursor-pointer gap-2" render={<a href="/settings/organization" />}>
+                  <Building2 className="size-4" />
+                  Organização
+                </DropdownMenuItem>
+                <DropdownMenuItem className="cursor-pointer gap-2" render={<a href="/settings/members" />}>
+                  <UserPlus className="size-4" />
+                  Membros
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem className="cursor-pointer gap-2 text-red-400 focus:text-red-400">
+                  <LogOut className="size-4" />
+                  Sair da Conta
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </SidebarMenuItem>

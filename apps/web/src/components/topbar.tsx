@@ -1,10 +1,17 @@
 "use client"
 
-import { Activity, Bell, Languages, Search } from "lucide-react"
+import { Bell, Search } from "lucide-react"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 import { ThemeToggle } from "@/components/theme-toggle"
+import { useEffect, useState } from "react"
 
 export function Topbar() {
+  const [isMac, setIsMac] = useState(false)
+
+  useEffect(() => {
+    setIsMac(navigator.platform.toUpperCase().includes("MAC"))
+  }, [])
+
   return (
     <header
       className="sticky top-0 z-50 flex h-16 w-full shrink-0 px-4 md:px-8 bg-background/80 backdrop-blur-md"
@@ -15,33 +22,34 @@ export function Topbar() {
         <div className="flex items-center gap-4">
           <SidebarTrigger className="-ml-2 text-muted-foreground hover:text-foreground" />
           <div className="hidden md:flex flex-col">
-            <span className="text-sm font-semibold leading-none mb-1 text-foreground">Hey, John</span>
-            <span className="text-xs text-muted-foreground leading-none">Welcome back to dashboard</span>
+            <span className="text-sm font-semibold leading-none mb-1 text-foreground">Olá, João</span>
+            <span className="text-xs text-muted-foreground leading-none">Bem-vindo ao seu painel</span>
           </div>
         </div>
 
         {/* Middle/Right side: Search and Icons */}
         <div className="flex items-center gap-6">
 
-          {/* Search Box */}
-          <div className="relative hidden sm:flex items-center bg-muted/60 rounded-md px-3 h-[36px] w-[280px] border border-border/50 focus-within:border-primary/50 focus-within:ring-1 focus-within:ring-primary/20 transition-all group overflow-hidden">
+          {/* Search Box — trigger para Command Palette */}
+          <button
+            className="relative hidden sm:flex items-center bg-muted/60 rounded-md px-3 h-[36px] w-[280px] border border-border/50 hover:border-primary/50 transition-all cursor-pointer group"
+            onClick={() => document.dispatchEvent(new KeyboardEvent("keydown", { key: "k", metaKey: true }))}
+          >
             <Search className="size-4 text-muted-foreground shrink-0" />
-            <input
-              type="search"
-              placeholder="Type to search..."
-              className="bg-transparent border-0 outline-none h-full w-full px-2 text-sm placeholder:text-muted-foreground/70"
-            />
-          </div>
+            <span className="px-2 text-sm text-muted-foreground/70">Buscar...</span>
+            <span className="ml-auto flex items-center gap-0.5 text-xs text-muted-foreground/50 font-mono">
+              <kbd className="px-1.5 py-0.5 rounded bg-muted border border-border/50 text-[10px] font-semibold">
+                {isMac ? "⌘" : "Ctrl"}
+              </kbd>
+              <kbd className="px-1.5 py-0.5 rounded bg-muted border border-border/50 text-[10px] font-semibold">
+                K
+              </kbd>
+            </span>
+          </button>
 
           {/* Action Icons */}
           <div className="flex items-center gap-3 text-muted-foreground/80">
-            <button className="hover:text-foreground transition-colors shrink-0 size-8 flex items-center justify-center rounded-full hover:bg-muted">
-              <Languages className="size-5" />
-            </button>
             <ThemeToggle />
-            <button className="hover:text-foreground transition-colors shrink-0 size-8 flex items-center justify-center rounded-full hover:bg-muted">
-              <Activity className="size-5" />
-            </button>
             {/* Notification Bell with red dot indicator */}
             <button className="relative hover:text-foreground transition-colors shrink-0 border-l border-border/60 pl-3 ml-1 h-6 flex items-center justify-center">
               <Bell className="size-5 ml-2" />

@@ -1,37 +1,63 @@
-interface ActivityItem {
-  id: string
-  label: string
-  initials: string
-  timestamp: string
+"use client"
+
+import { useEffect, useState } from "react"
+import type { Transaction } from "@/types/entities"
+import { transactionsService } from "@/services/transactions.service"
+import { formatCurrency } from "@/lib/format"
+import { TRANSACTION_TYPES } from "@/types/enums"
+import { ArrowDownLeft, ArrowUpRight, ArrowLeftRight } from "lucide-react"
+
+const typeIcons = {
+  entrada: ArrowDownLeft,
+  saida: ArrowUpRight,
+  transferencia: ArrowLeftRight,
 }
 
-interface RecentActivityProps {
-  items?: ActivityItem[]
+const typeColors = {
+  entrada: "text-emerald-500 bg-emerald-500/10",
+  saida: "text-red-400 bg-red-400/10",
+  transferencia: "text-blue-400 bg-blue-400/10",
 }
 
-const defaultItems: ActivityItem[] = [
-  { id: "1", label: "Atualização financeira", initials: "A0", timestamp: "Há 2 horas" },
-  { id: "2", label: "Atualização financeira", initials: "A1", timestamp: "Há 2 horas" },
-  { id: "3", label: "Atualização financeira", initials: "A2", timestamp: "Há 2 horas" },
-  { id: "4", label: "Atualização financeira", initials: "A3", timestamp: "Há 2 horas" },
-]
+const amountColors = {
+  entrada: "text-emerald-500",
+  saida: "text-red-400",
+  transferencia: "text-blue-400",
+}
 
-export function RecentActivity({ items = defaultItems }: RecentActivityProps) {
+export function RecentActivity() {
+  const [transactions, setTransactions] = useState<Transaction[]>([])
+
+  useEffect(() => {
+    transactionsService.getRecent(5).then(setTransactions)
+  }, [])
+
   return (
     <div className="rounded-[32px] border-none bg-background dark:bg-sidebar p-8 shadow-[0_20px_40px_-5px_rgba(0,0,0,0.06)] dark:shadow-[0_20px_40px_-5px_rgba(0,0,0,0.2)] flex flex-col gap-6 relative overflow-hidden transition-all duration-200">
-      <h3 className="font-semibold text-xl">Ações Recentes</h3>
-      <div className="flex flex-col gap-6">
-        {items.map((item) => (
-          <div key={item.id} className="flex gap-4 items-center">
-            <div className="h-12 w-12 shrink-0 rounded-full bg-primary/10 flex items-center justify-center text-sm font-semibold text-primary">
-              {item.initials}
+      <div>
+        <h3 className="font-semibold text-xl">Atividade Recente</h3>
+        <p className="text-sm text-muted-foreground mt-1">Últimas movimentações</p>
+      </div>
+      <div className="flex flex-col gap-4">
+        {transactions.map((txn) => {
+          const Icon = typeIcons[txn.type]
+          return (
+            <div key={txn.id} className="flex gap-4 items-center">
+              <div className={`h-10 w-10 shrink-0 rounded-xl flex items-center justify-center ${typeColors[txn.type]}`}>
+                <Icon className="size-4" />
+              </div>
+              <div className="flex flex-col gap-0.5 flex-1 min-w-0">
+                <span className="text-sm font-medium truncate">{txn.description || TRANSACTION_TYPES[txn.type]}</span>
+                <span className="text-xs text-muted-foreground">
+                  {new Date(txn.date).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" })}
+                </span>
+              </div>
+              <span className={`text-sm font-semibold tabular-nums ${amountColors[txn.type]}`}>
+                {txn.type === "entrada" ? "+" : txn.type === "saida" ? "-" : ""}{formatCurrency(txn.amount)}
+              </span>
             </div>
-            <div className="flex flex-col gap-1">
-              <span className="text-sm font-semibold">{item.label}</span>
-              <span className="text-xs text-muted-foreground">{item.timestamp}</span>
-            </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
     </div>
   )
