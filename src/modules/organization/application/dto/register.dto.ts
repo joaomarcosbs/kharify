@@ -1,9 +1,9 @@
-import { IsEmail, IsNotEmpty, MinLength, IsEnum } from 'class-validator';
+import { IsEmail, IsNotEmpty, MinLength, IsEnum, IsOptional, IsString } from 'class-validator';
+import { IsDocument } from '../../../../common/validators/document.validator';
 
 export enum OrganizationTypeDto {
-  familia = 'familia',
-  mei = 'mei',
-  pme = 'pme',
+  pessoal = 'pessoal',
+  empresarial = 'empresarial',
 }
 
 export class RegisterDto {
@@ -13,7 +13,7 @@ export class RegisterDto {
   @IsEmail()
   email: string;
 
-  @MinLength(6)
+  @MinLength(8)
   password: string;
 
   @IsNotEmpty()
@@ -21,4 +21,8 @@ export class RegisterDto {
 
   @IsEnum(OrganizationTypeDto)
   organizationType: OrganizationTypeDto;
+
+  @IsString()
+  @IsDocument({ message: 'O documento informado não é um CPF ou CNPJ válido.' })
+  document: string;
 }

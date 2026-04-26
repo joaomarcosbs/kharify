@@ -1,6 +1,7 @@
 import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../../common/prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
+import { OrganizationType } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
@@ -29,7 +30,8 @@ export class AuthService {
       const org = await tx.organization.create({
         data: {
           name: dto.organizationName,
-          type: dto.organizationType,
+          type: dto.organizationType as OrganizationType,
+          document: dto.document ?? null,
         }
       });
 
@@ -95,7 +97,7 @@ export class AuthService {
          const org = await tx.organization.create({
            data: {
              name: 'Minha Organização',
-             type: 'familia',
+             type: OrganizationType.pessoal,
            }
          });
          
