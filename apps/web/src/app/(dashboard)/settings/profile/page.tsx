@@ -38,13 +38,14 @@ export default function ProfilePage() {
         {/* Avatar */}
         <div className="flex flex-col items-center gap-4 rounded-[24px] bg-background dark:bg-sidebar p-8 shadow-[0_20px_40px_-5px_rgba(0,0,0,0.06)] dark:shadow-[0_20px_40px_-5px_rgba(0,0,0,0.2)] h-fit">
           <div className="relative group">
-            <Avatar className="size-24 rounded-2xl">
-              <AvatarImage src="/avatars/john.jpg" alt="João Marcos" />
-              <AvatarFallback className="rounded-2xl bg-primary/10 text-primary text-2xl">JM</AvatarFallback>
+            <Avatar className="size-24 rounded-full">
+              <AvatarImage src="" alt="João Marcos" />
+              <AvatarFallback className="rounded-[inherit] bg-primary/10 text-primary text-2xl">JM</AvatarFallback>
             </Avatar>
-            <button className="absolute inset-0 rounded-2xl bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+            <label className="absolute inset-0 rounded-full bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer">
               <Camera className="size-6 text-white" />
-            </button>
+              <input type="file" className="hidden" accept="image/*" />
+            </label>
           </div>
           <div className="text-center">
             <p className="font-semibold">{form.name}</p>
@@ -71,7 +72,7 @@ export default function ProfilePage() {
             </div>
             <div className="flex flex-col gap-2">
               <Label htmlFor="cpf">CPF</Label>
-              <Input id="cpf" value={form.cpf} onChange={(e) => handleChange("cpf", e.target.value)} placeholder="000.000.000-00" />
+              <Input id="cpf" value={form.cpf} className="bg-muted/50 text-muted-foreground" readOnly placeholder="000.000.000-00" />
             </div>
           </div>
 

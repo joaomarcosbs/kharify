@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import type { Transaction } from "@/types/entities"
 import { transactionsService } from "@/services/transactions.service"
-import { formatCurrency } from "@/lib/format"
+import { useFormat } from "@/hooks/use-format"
 import { TRANSACTION_TYPES } from "@/types/enums"
 import { ArrowDownLeft, ArrowUpRight, ArrowLeftRight } from "lucide-react"
 
@@ -27,6 +27,7 @@ const amountColors = {
 
 export function RecentActivity() {
   const [transactions, setTransactions] = useState<Transaction[]>([])
+  const { formatCurrency } = useFormat()
 
   useEffect(() => {
     transactionsService.getRecent(5).then(setTransactions)

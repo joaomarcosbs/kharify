@@ -9,7 +9,8 @@ import { AccountBalanceChart } from "@/components/dashboard/account-balance-char
 import type { Account, Transaction } from "@/types/entities"
 import { accountsService } from "@/services/accounts.service"
 import { transactionsService } from "@/services/transactions.service"
-import { formatCurrency, formatDate } from "@/lib/format"
+import { formatDate } from "@/lib/format"
+import { useFormat } from "@/hooks/use-format"
 import { ACCOUNT_TYPES, TRANSACTION_TYPES } from "@/types/enums"
 import { mockCategories } from "@/mocks/categories"
 import { Wallet, Landmark, CreditCard, BarChart3, ArrowDownLeft, ArrowUpRight, ArrowLeftRight } from "lucide-react"
@@ -45,6 +46,7 @@ export default function AccountDetailPage() {
 
   const [account, setAccount] = useState<Account | null>(null)
   const [transactions, setTransactions] = useState<Transaction[]>([])
+  const { formatCurrency } = useFormat()
 
   useEffect(() => {
     async function load() {
@@ -102,7 +104,7 @@ export default function AccountDetailPage() {
         )
       },
     },
-  ], [])
+  ], [formatCurrency])
 
   if (!account) {
     return (

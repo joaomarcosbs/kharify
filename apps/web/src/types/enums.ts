@@ -12,11 +12,10 @@ export const AUTH_PROVIDERS: Record<AuthProvider, string> = {
 }
 
 // Organization
-export type OrganizationType = 'familia' | 'mei' | 'pme'
+export type OrganizationType = 'pessoal' | 'empresarial'
 export const ORGANIZATION_TYPES: Record<OrganizationType, string> = {
-  familia: 'Família',
-  mei: 'MEI',
-  pme: 'PME',
+  pessoal: 'Pessoal',
+  empresarial: 'Empresarial',
 }
 
 // User

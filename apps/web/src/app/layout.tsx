@@ -6,10 +6,11 @@ import "./globals.css";
 const lora = Lora({
   variable: "--font-lora",
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
 });
 
 export const metadata: Metadata = {
-  title: "Kharify - Faça Login",
+  title: "Kharify",
   description: "Plataforma SaaS Kharify",
 };
 
@@ -20,7 +21,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR" className={lora.variable} suppressHydrationWarning>
-      <body className="font-sans antialiased transition-colors duration-200">
+      <body className="font-sans antialiased transition-colors duration-200 bg-background text-foreground">
         <ThemeProvider
           attribute="class"
           defaultTheme="system"

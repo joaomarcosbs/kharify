@@ -30,21 +30,21 @@ const chartConfig = {
 
 export function BalanceHistoryChart() {
   return (
-    <div className="rounded-[32px] border-none bg-background dark:bg-sidebar p-8 shadow-[0_20px_40px_-5px_rgba(0,0,0,0.06)] dark:shadow-[0_20px_40px_-5px_rgba(0,0,0,0.2)] md:col-span-2 flex flex-col gap-6 relative overflow-hidden transition-all duration-200">
+    <div className="rounded-[24px] border-none bg-background dark:bg-sidebar p-6 shadow-[0_20px_40px_-5px_rgba(0,0,0,0.06)] dark:shadow-[0_20px_40px_-5px_rgba(0,0,0,0.2)] md:col-span-2 flex flex-col gap-4 relative overflow-hidden transition-all duration-200">
       <div>
-        <h3 className="font-semibold text-xl">Balanço — Últimos 6 Meses</h3>
-        <p className="text-sm text-muted-foreground mt-1">Evolução de entradas e saídas</p>
+        <h3 className="font-semibold text-base">Balanço — Últimos 6 Meses</h3>
+        <p className="text-[14px] text-muted-foreground mt-0.5">Evolução de entradas e saídas</p>
       </div>
 
-      <ChartContainer config={chartConfig} className="min-h-[280px] w-full">
+      <ChartContainer config={chartConfig} className="min-h-[220px] max-h-[220px] w-full">
         <AreaChart accessibilityLayer data={chartData}>
           <CartesianGrid vertical={false} strokeDasharray="3 3" className="stroke-border/30" />
-          <XAxis dataKey="month" tickLine={false} tickMargin={10} axisLine={false} className="text-xs" />
+          <XAxis dataKey="month" tickLine={false} tickMargin={8} axisLine={false} tick={{ fontSize: 13, fill: "currentColor" }} />
           <YAxis
             tickLine={false}
             axisLine={false}
             tickFormatter={(v) => `R$${(v / 1000).toFixed(0)}k`}
-            className="text-xs"
+            tick={{ fontSize: 13, fill: "currentColor" }}
           />
           <ChartTooltip
             content={

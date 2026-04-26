@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { USER_ROLES } from "@/types/enums"
 import type { UserRole } from "@/types/enums"
+import { MemberFormSheet } from "@/components/forms/member-form-sheet"
 import { UserPlus, Crown, Shield, User } from "lucide-react"
 
 interface Member {
@@ -47,8 +48,8 @@ export default function MembersPage() {
         const m = row.original
         return (
           <div className="flex items-center gap-3">
-            <Avatar className="size-9 rounded-lg">
-              <AvatarFallback className="rounded-lg bg-primary/10 text-primary text-xs">{m.initials}</AvatarFallback>
+            <Avatar className="size-9 rounded-full">
+              <AvatarFallback className="rounded-full bg-primary/10 text-primary text-xs">{m.initials}</AvatarFallback>
             </Avatar>
             <div className="flex flex-col">
               <span className="font-medium text-sm">{m.name}</span>
@@ -65,8 +66,8 @@ export default function MembersPage() {
         const m = row.original
         const Icon = roleIcons[m.role]
         return (
-          <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium ${roleColors[m.role]}`}>
-            <Icon className="size-3" />
+          <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[13px] font-medium ${roleColors[m.role]}`}>
+            <Icon className="size-3.5" />
             {USER_ROLES[m.role]}
           </span>
         )
@@ -84,10 +85,7 @@ export default function MembersPage() {
           { label: "Membros" },
         ]}
         actions={
-          <Button className="rounded-xl gap-2">
-            <UserPlus className="size-4" />
-            Convidar Membro
-          </Button>
+          <MemberFormSheet />
         }
       />
 

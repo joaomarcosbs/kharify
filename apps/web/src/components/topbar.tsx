@@ -1,15 +1,21 @@
 "use client"
 
-import { Bell, Search } from "lucide-react"
+import { Bell, Search, Eye, EyeOff } from "lucide-react"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { useEffect, useState } from "react"
+import { usePrivacyStore } from "@/stores/privacy-store"
 
 export function Topbar() {
+  const [mounted, setMounted] = useState(false)
   const [isMac, setIsMac] = useState(false)
+  const hideBalances = usePrivacyStore((state) => state.hideBalances)
+  const toggleHideBalances = usePrivacyStore((state) => state.toggleHideBalances)
+  const showHidden = mounted && hideBalances
 
   useEffect(() => {
     setIsMac(navigator.platform.toUpperCase().includes("MAC"))
+    setMounted(true)
   }, [])
 
   return (
@@ -22,8 +28,8 @@ export function Topbar() {
         <div className="flex items-center gap-4">
           <SidebarTrigger className="-ml-2 text-muted-foreground hover:text-foreground" />
           <div className="hidden md:flex flex-col">
-            <span className="text-sm font-semibold leading-none mb-1 text-foreground">Olá, João</span>
-            <span className="text-xs text-muted-foreground leading-none">Bem-vindo ao seu painel</span>
+            <span className="text-base font-semibold leading-none mb-1 text-foreground">Olá, João</span>
+            <span className="text-sm text-muted-foreground leading-none mt-0.5">Bem-vindo ao seu painel</span>
           </div>
         </div>
 
@@ -49,9 +55,15 @@ export function Topbar() {
 
           {/* Action Icons */}
           <div className="flex items-center gap-3 text-muted-foreground/80">
+            <button
+              onClick={toggleHideBalances}
+              className="hover:text-foreground transition-colors shrink-0 flex items-center justify-center p-1.5 rounded-md hover:bg-muted"
+            >
+              {showHidden ? <EyeOff className="size-5" /> : <Eye className="size-5" />}
+            </button>
             <ThemeToggle />
             {/* Notification Bell with red dot indicator */}
-            <button className="relative hover:text-foreground transition-colors shrink-0 border-l border-border/60 pl-3 ml-1 h-6 flex items-center justify-center">
+            <button className="relative hover:text-foreground transition-colors shrink-0 border-l border-border/60 pl-3 ml-1 h-6 flex items-center justify-center pt-0">
               <Bell className="size-5 ml-2" />
               <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-red-500 ring-2 ring-background translate-x-1 -translate-y-0.5"></span>
             </button>

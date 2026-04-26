@@ -6,13 +6,15 @@ import { PageHeader } from "@/components/page-header"
 import { DataTable } from "@/components/dashboard/data-table"
 import type { Transaction } from "@/types/entities"
 import { transactionsService } from "@/services/transactions.service"
-import { formatCurrency, formatDate } from "@/lib/format"
+import { formatDate } from "@/lib/format"
+import { useFormat } from "@/hooks/use-format"
 import { TRANSACTION_TYPES } from "@/types/enums"
 import { mockCategories } from "@/mocks/categories"
 import { mockAccounts } from "@/mocks/accounts"
 import { ArrowDownLeft, ArrowUpRight, ArrowLeftRight } from "lucide-react"
 import { TransactionFormSheet } from "@/components/forms/transaction-form-sheet"
 import { TopCategoriesChart } from "@/components/dashboard/top-categories-chart"
+import { StatCard } from "@/components/dashboard/stat-card"
 
 const typeConfig = {
   entrada: { icon: ArrowDownLeft, color: "text-emerald-500", bg: "bg-emerald-500/10" },
@@ -31,10 +33,19 @@ const getAccountName = (id: string) => {
 
 export default function TransacoesPage() {
   const [transactions, setTransactions] = useState<Transaction[]>([])
+  const { formatCurrency } = useFormat()
 
   useEffect(() => {
     transactionsService.findAll().then(setTransactions)
   }, [])
+
+  const totalEntradas = useMemo(() => 
+    transactions.filter(t => t.type === 'entrada').reduce((acc, t) => acc + t.amount, 0),
+  [transactions])
+
+  const totalSaidas = useMemo(() => 
+    transactions.filter(t => t.type === 'saida').reduce((acc, t) => acc + t.amount, 0),
+  [transactions])
 
   const columns = useMemo<ColumnDef<Transaction, unknown>[]>(() => [
     {
@@ -56,8 +67,8 @@ export default function TransacoesPage() {
         const config = typeConfig[t.type]
         const Icon = config.icon
         return (
-          <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium ${config.bg} ${config.color}`}>
-            <Icon className="size-3" />
+          <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[13px] font-medium ${config.bg} ${config.color}`}>
+            <Icon className="size-3.5" />
             {TRANSACTION_TYPES[t.type]}
           </span>
         )
@@ -71,13 +82,13 @@ export default function TransacoesPage() {
       accessorFn: (row) => getCategoryName(row.categoryId),
       id: "category",
       header: "Categoria",
-      cell: ({ getValue }) => <span className="text-muted-foreground text-xs">{getValue() as string}</span>,
+      cell: ({ getValue }) => <span className="text-muted-foreground">{getValue() as string}</span>,
     },
     {
       accessorFn: (row) => getAccountName(row.accountId),
       id: "account",
       header: "Conta",
-      cell: ({ getValue }) => <span className="text-xs">{getValue() as string}</span>,
+      cell: ({ getValue }) => <span>{getValue() as string}</span>,
     },
     {
       accessorKey: "amount",
@@ -92,7 +103,7 @@ export default function TransacoesPage() {
         )
       },
     },
-  ], [])
+  ], [formatCurrency])
 
   return (
     <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-8">
@@ -102,8 +113,27 @@ export default function TransacoesPage() {
         actions={<TransactionFormSheet />}
       />
 
-      {/* Gráfico top categorias */}
-      <TopCategoriesChart />
+      {/* Resumo e Gráfico */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
+        <div className="flex flex-col gap-4 lg:col-span-1 h-full">
+          <StatCard
+            className="flex-1"
+            title="Total Entradas"
+            value={formatCurrency(totalEntradas)}
+            icon={<ArrowDownLeft />}
+          />
+          <StatCard
+            className="flex-1"
+            title="Total Saídas"
+            value={formatCurrency(totalSaidas)}
+            trendDirection="down"
+            icon={<ArrowUpRight />}
+          />
+        </div>
+        <div className="lg:col-span-2 h-full">
+          <TopCategoriesChart />
+        </div>
+      </div>
 
       {/* Tabela */}
       <DataTable

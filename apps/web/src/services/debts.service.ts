@@ -35,12 +35,70 @@ export const debtsService = {
     return newDebt
   },
 
-  simulate: async (_id: string, dto: SimulateDebtDto): Promise<SimulationResult> => {
-    // Retorna resultados mockados baseado no tipo de simulação
-    if (dto.simulationType === 'sac') {
-      return { ...mockSimulationSAC }
+  simulate: async (id: string, dto: SimulateDebtDto): Promise<SimulationResult> => {
+    const debt = debts.find((d) => d.id === id)
+    if (!debt) throw new Error('Dívida não encontrada')
+
+    const balance = debt.currentBalance
+    const rate = (debt.interestRateMonth || 1.5) / 100
+    // Estimate a base installment if none exists (36 months assumption)
+    const baseInstallment = debt.installmentAmount || (balance * (rate / (1 - Math.pow(1 + rate, -36))))
+    
+    let extra = 0
+    if (dto.simulationMode === 'extraPayment') {
+       extra = dto.extraPaymentAmount || 0
     }
-    return { ...mockSimulationPrice }
+
+    let current = balance
+    let months = 0
+    let totalInterest = 0
+    const rows = []
+
+    // SAC vs PRICE basic implementation
+    const isSac = dto.simulationType === 'sac'
+    const originalMonths = debt.totalInstallments || 48
+    const fixedPrincipal = balance / originalMonths
+
+    while(current > 0.01 && months < 420) { // max 35 years fail-safe
+       months++
+       const interest = current * rate
+       let principal = 0
+       let payment = 0
+
+       if (isSac) {
+           principal = fixedPrincipal + extra
+           if (principal > current) principal = current
+           payment = principal + interest
+       } else {
+           payment = baseInstallment + extra
+           if (payment <= interest) {
+               payment = interest + 10 // Prevent infinite loop if payment doesn't cover interest
+           }
+           principal = payment - interest
+           if (principal > current) {
+               principal = current
+               payment = principal + interest
+           }
+       }
+
+       totalInterest += interest
+       current -= principal
+
+       rows.push({
+          monthIndex: months,
+          paymentAmount: payment,
+          interestPaid: interest,
+          principalPaid: principal,
+          remainingBalance: Math.max(0, current)
+       })
+    }
+
+    return {
+       months,
+       totalPaid: balance + totalInterest,
+       totalInterest,
+       rows
+    }
   },
 
   /** Total devido de todas as dívidas ativas */

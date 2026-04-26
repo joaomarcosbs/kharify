@@ -47,7 +47,11 @@ export default function OrganizationPage() {
             <Label htmlFor="orgType">Tipo</Label>
             <Select value={form.type} onValueChange={(v) => v && setForm((p) => ({ ...p, type: v as OrganizationType }))}>
               <SelectTrigger id="orgType">
-                <SelectValue />
+                <SelectValue>
+                  {form.type
+                    ? ORGANIZATION_TYPES[form.type as OrganizationType]
+                    : "Selecione..."}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {Object.entries(ORGANIZATION_TYPES).map(([key, label]) => (
@@ -56,6 +60,17 @@ export default function OrganizationPage() {
               </SelectContent>
             </Select>
           </div>
+          
+          {(form.type === "mei" || form.type === "pme") && (
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="orgCnpj">CNPJ</Label>
+              <Input 
+                id="orgCnpj" 
+                placeholder="00.000.000/0000-00" 
+                onChange={(e) => console.log(e.target.value)} 
+              />
+            </div>
+          )}
         </div>
 
         <div className="flex justify-end pt-2">

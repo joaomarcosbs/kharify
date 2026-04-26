@@ -8,7 +8,7 @@ import { DataTable } from "@/components/dashboard/data-table"
 import type { Account } from "@/types/entities"
 import type { AccountType } from "@/types/enums"
 import { accountsService } from "@/services/accounts.service"
-import { formatCurrency } from "@/lib/format"
+import { useFormat } from "@/hooks/use-format"
 import { ACCOUNT_TYPES } from "@/types/enums"
 import { Wallet, Landmark, CreditCard, BarChart3, LayoutGrid, Table2 } from "lucide-react"
 import { AccountFormSheet } from "@/components/forms/account-form-sheet"
@@ -43,6 +43,7 @@ export default function ContasPage() {
   const [totalBalance, setTotalBalance] = useState(0)
   const [tab, setTab] = useState<FilterTab>("todas")
   const [view, setView] = useState<ViewMode>("cards")
+  const { formatCurrency } = useFormat()
 
   useEffect(() => {
     async function load() {
@@ -86,7 +87,7 @@ export default function ContasPage() {
     {
       accessorKey: "type",
       header: "Tipo",
-      cell: ({ row }) => <span className="text-xs text-muted-foreground">{ACCOUNT_TYPES[row.original.type]}</span>,
+      cell: ({ row }) => <span className="text-muted-foreground">{ACCOUNT_TYPES[row.original.type]}</span>,
     },
     {
       accessorKey: "initialBalance",
@@ -106,7 +107,7 @@ export default function ContasPage() {
         )
       },
     },
-  ], [])
+  ], [formatCurrency])
 
   return (
     <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-8">

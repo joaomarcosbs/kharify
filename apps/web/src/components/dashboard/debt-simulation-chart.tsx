@@ -43,7 +43,7 @@ export function DebtSimulationChart({ priceData, sacData }: DebtSimulationChartP
         <p className="text-xs text-muted-foreground mt-0.5">Comparação entre os dois sistemas de amortização</p>
       </div>
 
-      <ChartContainer config={chartConfig} className="min-h-[240px] w-full">
+      <ChartContainer config={chartConfig} className="min-h-[200px] max-h-[200px] w-full">
         <LineChart accessibilityLayer data={data}>
           <CartesianGrid vertical={false} strokeDasharray="3 3" className="stroke-border/30" />
           <XAxis

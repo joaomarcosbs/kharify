@@ -7,7 +7,7 @@ import { CashflowChart } from "@/components/dashboard/cashflow-chart"
 import { RecentActivity } from "@/components/dashboard/recent-activity"
 import { ExpensesByGroupChart } from "@/components/dashboard/expenses-group-chart"
 import { BalanceHistoryChart } from "@/components/dashboard/balance-history-chart"
-import { formatCurrency } from "@/lib/format"
+import { useFormat } from "@/hooks/use-format"
 import { transactionsService } from "@/services/transactions.service"
 import { debtsService } from "@/services/debts.service"
 import { billsService } from "@/services/bills.service"
@@ -20,6 +20,7 @@ export default function DashboardOverviewPage() {
   const [totalDebt, setTotalDebt] = useState(0)
   const [upcomingBills, setUpcomingBills] = useState(0)
   const [totalBalance, setTotalBalance] = useState(0)
+  const { formatCurrency } = useFormat()
 
   useEffect(() => {
     async function loadKPIs() {

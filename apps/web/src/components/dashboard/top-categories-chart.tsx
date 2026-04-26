@@ -50,33 +50,33 @@ export function TopCategoriesChart() {
     }))
 
   return (
-    <div className="rounded-[32px] border-none bg-background dark:bg-sidebar p-8 shadow-[0_20px_40px_-5px_rgba(0,0,0,0.06)] dark:shadow-[0_20px_40px_-5px_rgba(0,0,0,0.2)] flex flex-col gap-6 relative overflow-hidden transition-all duration-200">
-      <div>
-        <h3 className="font-semibold text-xl">Top 5 Categorias</h3>
-        <p className="text-sm text-muted-foreground mt-1">Maiores despesas do mês</p>
+    <div className="rounded-[24px] border-none bg-background dark:bg-sidebar p-6 shadow-[0_20px_40px_-5px_rgba(0,0,0,0.06)] dark:shadow-[0_20px_40px_-5px_rgba(0,0,0,0.2)] flex flex-col items-center justify-center gap-4 relative overflow-hidden transition-all duration-200 h-full w-full">
+      <div className="w-full text-left shrink-0">
+        <h3 className="font-semibold text-base">Top 5 Categorias</h3>
+        <p className="text-[14px] text-muted-foreground mt-0.5">Maiores despesas do mês</p>
       </div>
 
-      <ChartContainer config={chartConfig} className="min-h-[260px] w-full">
+      <ChartContainer config={chartConfig} className="w-full h-full min-h-[220px] max-h-[300px]">
         <BarChart
           accessibilityLayer
           data={data}
           layout="vertical"
-          margin={{ left: 10 }}
+          margin={{ left: 10, right: 10 }}
         >
           <XAxis
             type="number"
             tickLine={false}
             axisLine={false}
             tickFormatter={(v) => `R$${v}`}
-            className="text-xs"
+            tick={{ fontSize: 13, fill: "currentColor" }}
           />
           <YAxis
             type="category"
             dataKey="name"
             tickLine={false}
             axisLine={false}
-            width={100}
-            className="text-xs"
+            width={120}
+            tick={{ fontSize: 14, fill: "currentColor" }}
           />
           <ChartTooltip
             content={

@@ -12,6 +12,8 @@ import {
   TrendingDown,
   User,
   UserPlus,
+  Settings2,
+  CreditCard,
 } from "lucide-react"
 
 import {
@@ -93,6 +95,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   <SidebarMenuButton
                     tooltip={item.title}
                     render={<a href={item.url} />}
+                    className="text-[15px] [&>svg]:size-5 py-5"
                   >
                     <item.icon />
                     <span className="truncate">
@@ -113,6 +116,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 <SidebarMenuButton
                   tooltip="Configurações"
                   render={<a href="/settings" />}
+                  className="text-[15px] [&>svg]:size-5 py-5"
                 >
                   <Settings />
                   <span className="truncate">Configurações</span>
@@ -133,9 +137,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   className="w-full data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
                 />
               }>
-                <Avatar className="h-8 w-8 rounded-lg shrink-0">
-                  <AvatarImage src="/avatars/john.jpg" alt="João Marcos" />
-                  <AvatarFallback className="rounded-lg bg-primary/10 text-primary">JM</AvatarFallback>
+                <Avatar className="h-8 w-8 rounded-full shrink-0">
+                  <AvatarImage src="" alt="João Marcos" />
+                  <AvatarFallback className="rounded-[inherit] bg-primary/10 text-primary">JM</AvatarFallback>
                 </Avatar>
                 <div className="flex flex-1 flex-col text-left text-sm leading-tight overflow-hidden">
                   <span className="truncate font-semibold text-foreground">João Marcos</span>
@@ -160,6 +164,19 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 <DropdownMenuItem className="cursor-pointer gap-2" render={<a href="/settings/members" />}>
                   <UserPlus className="size-4" />
                   Membros
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem className="cursor-pointer gap-2" render={<a href="/settings/appearance" />}>
+                  <Settings className="size-4" />
+                  Aparência
+                </DropdownMenuItem>
+                <DropdownMenuItem className="cursor-pointer gap-2" render={<a href="/settings/preferences" />}>
+                  <Settings2 className="size-4" />
+                  Preferências
+                </DropdownMenuItem>
+                <DropdownMenuItem className="cursor-pointer gap-2" render={<a href="/settings/billing" />}>
+                  <CreditCard className="size-4" />
+                  Faturamento
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem className="cursor-pointer gap-2 text-red-400 focus:text-red-400">

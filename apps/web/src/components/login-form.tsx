@@ -1,3 +1,8 @@
+"use client"
+
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import * as z from "zod"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -7,34 +12,75 @@ import {
   FieldGroup,
   FieldLabel,
   FieldSeparator,
+  FieldError,
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import { GalleryVerticalEnd, Loader2 } from "lucide-react"
+
+const schema = z.object({
+  email: z.string().email("Insira um e-mail válido."),
+  password: z.string().min(1, "A senha é obrigatória."),
+})
+
+type FormValues = z.infer<typeof schema>
 
 export function LoginForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<FormValues>({
+    resolver: zodResolver(schema),
+    mode: "onTouched",
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  })
+
+  const processForm = async (data: FormValues) => {
+    // Simulando uma requisição
+    await new Promise(resolve => setTimeout(resolve, 1000))
+    console.log("Login Form Data:", data)
+  }
+
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
-      <Card className="overflow-hidden p-0">
-        <CardContent className="grid p-0 md:grid-cols-2">
-          <form className="p-6 md:p-8">
+      <Card>
+        <CardContent className="p-6 md:p-8">
+          <form onSubmit={handleSubmit(processForm)}>
             <FieldGroup>
               <div className="flex flex-col items-center gap-2 text-center">
+                <a
+                  href="#"
+                  className="flex flex-col items-center gap-2 font-medium mb-6"
+                >
+                  {/* <div className="flex h-10 w-10 items-center justify-center rounded-md bg-primary text-primary-foreground">
+                    <GalleryVerticalEnd className="size-5" />
+                  </div> */}
+                  <span className="text-xl font-bold">Kharify</span>
+                </a>
                 <h1 className="text-2xl font-bold">Bem-vindo de volta</h1>
                 <p className="text-balance text-muted-foreground">
                   Faça login na sua conta Kharify
                 </p>
               </div>
+
               <Field>
                 <FieldLabel htmlFor="email">E-mail</FieldLabel>
                 <Input
                   id="email"
                   type="email"
                   placeholder="m@exemplo.com"
-                  required
+                  {...register("email")}
+                  aria-invalid={!!errors.email}
                 />
+                {errors.email && <FieldError errors={[errors.email]} />}
               </Field>
+
               <Field>
                 <div className="flex items-center">
                   <FieldLabel htmlFor="password">Senha</FieldLabel>
@@ -45,14 +91,26 @@ export function LoginForm({
                     Esqueceu sua senha?
                   </a>
                 </div>
-                <Input id="password" type="password" required />
+                <Input
+                  id="password"
+                  type="password"
+                  {...register("password")}
+                  aria-invalid={!!errors.password}
+                />
+                {errors.password && <FieldError errors={[errors.password]} />}
               </Field>
+
               <Field>
-                <Button type="submit">Entrar</Button>
+                <Button type="submit" disabled={isSubmitting}>
+                  {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Entrar
+                </Button>
               </Field>
+
               <FieldSeparator className="*:data-[slot=field-separator-content]:bg-card">
                 Ou continue com
               </FieldSeparator>
+
               <Field className="grid grid-cols-3 gap-4">
                 <Button variant="outline" type="button">
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
@@ -83,20 +141,13 @@ export function LoginForm({
                 </Button>
               </Field>
               <FieldDescription className="text-center">
-                Ainda não tem uma conta? <a href="#">Registre-se</a>
+                Ainda não tem uma conta? <a href="/register">Registre-se</a>
               </FieldDescription>
             </FieldGroup>
           </form>
-          <div className="relative hidden bg-muted md:block">
-            <img
-              src="/login-bg.png"
-              alt="Kharify Splash Screen"
-              className="absolute inset-0 h-full w-full object-cover dark:brightness-[0.8]"
-            />
-          </div>
         </CardContent>
       </Card>
-      <FieldDescription className="px-6 text-center">
+      <FieldDescription className="text-center text-xs text-muted-foreground">
         Ao clicar em entrar, você concorda com nossos <br />
         <a href="#">Termos de Serviço</a> e <a href="#">Política de Privacidade</a>.
       </FieldDescription>

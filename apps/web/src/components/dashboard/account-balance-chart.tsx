@@ -73,11 +73,11 @@ export function AccountBalanceChart({ accountId }: AccountBalanceChartProps) {
   const data = mockBalanceData[period]
 
   return (
-    <div className="rounded-[32px] border-none bg-background dark:bg-sidebar p-8 shadow-[0_20px_40px_-5px_rgba(0,0,0,0.06)] dark:shadow-[0_20px_40px_-5px_rgba(0,0,0,0.2)] flex flex-col gap-6 relative overflow-hidden transition-all duration-200">
+    <div className="rounded-[24px] border-none bg-background dark:bg-sidebar p-6 shadow-[0_20px_40px_-5px_rgba(0,0,0,0.06)] dark:shadow-[0_20px_40px_-5px_rgba(0,0,0,0.2)] flex flex-col gap-4 relative overflow-hidden transition-all duration-200">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="font-semibold text-xl">Evolução do Saldo</h3>
-          <p className="text-sm text-muted-foreground mt-1">Histórico de saldo ao longo do tempo</p>
+          <h3 className="font-semibold text-base">Evolução do Saldo</h3>
+          <p className="text-[14px] text-muted-foreground mt-0.5">Histórico de saldo ao longo do tempo</p>
         </div>
 
         {/* Period selector */}
@@ -86,7 +86,7 @@ export function AccountBalanceChart({ accountId }: AccountBalanceChartProps) {
             <button
               key={p}
               onClick={() => setPeriod(p)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+              className={`px-3 py-1.5 rounded-lg text-[13px] font-medium transition-all ${
                 period === p
                   ? "bg-foreground text-background shadow-sm"
                   : "text-muted-foreground hover:text-foreground"
@@ -98,15 +98,15 @@ export function AccountBalanceChart({ accountId }: AccountBalanceChartProps) {
         </div>
       </div>
 
-      <ChartContainer config={chartConfig} className="min-h-[280px] w-full">
+      <ChartContainer config={chartConfig} className="min-h-[220px] max-h-[220px] w-full">
         <AreaChart accessibilityLayer data={data}>
           <CartesianGrid vertical={false} strokeDasharray="3 3" className="stroke-border/30" />
-          <XAxis dataKey="date" tickLine={false} tickMargin={10} axisLine={false} className="text-xs" />
+          <XAxis dataKey="date" tickLine={false} tickMargin={8} axisLine={false} tick={{ fontSize: 13, fill: "currentColor" }} />
           <YAxis
             tickLine={false}
             axisLine={false}
             tickFormatter={(v) => `R$${(v / 1000).toFixed(1)}k`}
-            className="text-xs"
+            tick={{ fontSize: 13, fill: "currentColor" }}
           />
           <ChartTooltip
             content={

@@ -1,6 +1,10 @@
 "use client"
 
 import { useState } from "react"
+import { useForm, Controller } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import * as z from "zod"
+
 import {
   Sheet,
   SheetContent,
@@ -13,49 +17,67 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { DatePicker } from "@/components/ui/date-picker"
+import { FieldError } from "@/components/ui/field"
 import { ACCOUNT_TYPES } from "@/types/enums"
 import type { AccountType } from "@/types/enums"
 import { Plus, Save } from "lucide-react"
 
+const schema = z.object({
+  name: z.string().min(1, "O nome da conta é obrigatório."),
+  type: z.enum(["conta", "carteira", "cartao", "corretora"] as const, {
+    required_error: "Selecione um tipo.",
+  }),
+  initialBalance: z.coerce.number({
+    invalid_type_error: "Insira um valor válido.",
+  }),
+  initialBalanceDate: z.date({
+    required_error: "A data do saldo é obrigatória.",
+  }),
+})
+
+type FormValues = z.infer<typeof schema>
+
 interface AccountFormSheetProps {
-  onSubmit?: (data: {
-    name: string
-    type: AccountType
-    initialBalance: number
-    initialBalanceDate: string
-  }) => void
+  onSubmit?: (data: FormValues) => void
 }
 
 export function AccountFormSheet({ onSubmit }: AccountFormSheetProps) {
   const [open, setOpen] = useState(false)
-  const [form, setForm] = useState({
-    name: "",
-    type: "conta" as AccountType,
-    initialBalance: "",
-    initialBalanceDate: new Date().toISOString().split("T")[0],
+
+  const {
+    register,
+    handleSubmit,
+    control,
+    reset,
+    formState: { errors },
+  } = useForm<FormValues>({
+    resolver: zodResolver(schema),
+    mode: "onTouched",
+    defaultValues: {
+      name: "",
+      type: "conta",
+      initialBalance: 0,
+      initialBalanceDate: new Date(),
+    },
   })
 
-  const handleChange = (field: string, value: string) => {
-    setForm((prev) => ({ ...prev, [field]: value }))
-  }
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    onSubmit?.({
-      name: form.name,
-      type: form.type,
-      initialBalance: Number(form.initialBalance),
-      initialBalanceDate: form.initialBalanceDate,
-    })
-    setForm({ name: "", type: "conta", initialBalance: "", initialBalanceDate: new Date().toISOString().split("T")[0] })
+  const processForm = (data: FormValues) => {
+    onSubmit?.(data)
+    reset()
     setOpen(false)
   }
 
+  const handleOpenChange = (newOpen: boolean) => {
+    setOpen(newOpen)
+    if (!newOpen) reset()
+  }
+
   return (
-    <Sheet open={open} onOpenChange={setOpen}>
+    <Sheet open={open} onOpenChange={handleOpenChange}>
       <SheetTrigger render={<Button className="rounded-xl gap-2" />}>
-          <Plus className="size-4" />
-          Nova Conta
+        <Plus className="size-4" />
+        Nova Conta
       </SheetTrigger>
       <SheetContent className="sm:max-w-[440px] overflow-y-auto">
         <SheetHeader>
@@ -63,54 +85,71 @@ export function AccountFormSheet({ onSubmit }: AccountFormSheetProps) {
           <SheetDescription>Adicione uma nova conta para acompanhar seus saldos.</SheetDescription>
         </SheetHeader>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-5 mt-6">
+        <form onSubmit={handleSubmit(processForm)} className="flex flex-col gap-5 mt-6 w-full">
           <div className="flex flex-col gap-2">
             <Label htmlFor="acc-name">Nome da conta *</Label>
             <Input
               id="acc-name"
               placeholder="Ex: Nubank, Bradesco, Carteira"
-              value={form.name}
-              onChange={(e) => handleChange("name", e.target.value)}
-              required
+              {...register("name")}
+              aria-invalid={!!errors.name}
             />
+            {errors.name && <FieldError errors={[errors.name]} />}
           </div>
 
           <div className="flex flex-col gap-2">
             <Label htmlFor="acc-type">Tipo *</Label>
-            <Select value={form.type} onValueChange={(v) => v && handleChange("type", v)}>
-              <SelectTrigger id="acc-type">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {Object.entries(ACCOUNT_TYPES).map(([key, label]) => (
-                  <SelectItem key={key} value={key}>{label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Controller
+              control={control}
+              name="type"
+              render={({ field }) => (
+                <Select value={field.value} onValueChange={field.onChange}>
+                  <SelectTrigger id="acc-type" aria-invalid={!!errors.type}>
+                    <SelectValue>
+                      {field.value
+                        ? ACCOUNT_TYPES[field.value as AccountType]
+                        : "Selecione..."}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.entries(ACCOUNT_TYPES).map(([key, label]) => (
+                      <SelectItem key={key} value={key}>{label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            />
+            {errors.type && <FieldError errors={[errors.type]} />}
           </div>
 
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="acc-balance">Saldo inicial (R$) *</Label>
-            <Input
-              id="acc-balance"
-              type="number"
-              step="0.01"
-              placeholder="0,00"
-              value={form.initialBalance}
-              onChange={(e) => handleChange("initialBalance", e.target.value)}
-              required
-            />
-          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="acc-balance">Saldo inicial (R$) *</Label>
+              <Input
+                id="acc-balance"
+                type="number"
+                step="0.01"
+                placeholder="0,00"
+                {...register("initialBalance")}
+                aria-invalid={!!errors.initialBalance}
+              />
+              {errors.initialBalance && <FieldError errors={[errors.initialBalance]} />}
+            </div>
 
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="acc-date">Data do saldo inicial *</Label>
-            <Input
-              id="acc-date"
-              type="date"
-              value={form.initialBalanceDate}
-              onChange={(e) => handleChange("initialBalanceDate", e.target.value)}
-              required
-            />
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="acc-date">Data do saldo *</Label>
+              <Controller
+                control={control}
+                name="initialBalanceDate"
+                render={({ field }) => (
+                  <DatePicker
+                    value={field.value}
+                    onChange={field.onChange}
+                  />
+                )}
+              />
+              {errors.initialBalanceDate && <FieldError errors={[errors.initialBalanceDate]} />}
+            </div>
           </div>
 
           <Button type="submit" className="rounded-xl gap-2 mt-4">
