@@ -23,9 +23,8 @@ enum AuthProvider {
 }
 
 enum OrganizationType {
-  familia
-  mei
-  pme
+  pessoal
+  empresarial
 }
 
 enum UserRole {
@@ -126,6 +125,7 @@ model Organization {
   id        String             @id @default(uuid()) @db.Uuid
   name      String
   type      OrganizationType
+  document  String?            @db.VarChar(14)
   createdAt DateTime           @default(now()) @map("created_at") @db.Timestamptz
 
   users        UserOrganizationRole[]
