@@ -13,7 +13,17 @@ export interface JwtPayload {
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(configService: ConfigService) {
     super({
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      jwtFromRequest: ExtractJwt.fromExtractors([
+        ExtractJwt.fromAuthHeaderAsBearerToken(),
+        (req: any) => {
+          let token = null;
+          if (req && req.headers && req.headers.cookie) {
+            const match = req.headers.cookie.match(/(?:^|;) *kharify_token=([^;]*)/);
+            if (match) token = match[1];
+          }
+          return token;
+        }
+      ]),
       ignoreExpiration: false,
       secretOrKey: configService.get<string>('JWT_SECRET') || 'super-secret-default',
     });
