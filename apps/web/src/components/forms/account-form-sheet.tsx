@@ -23,16 +23,19 @@ import { ACCOUNT_TYPES } from "@/types/enums"
 import type { AccountType } from "@/types/enums"
 import { Plus, Save } from "lucide-react"
 
+const ACCOUNT_TYPE_VALUES = ["conta", "carteira", "cartao", "corretora"] as const;
+
 const schema = z.object({
   name: z.string().min(1, "O nome da conta é obrigatório."),
-  type: z.enum(["conta", "carteira", "cartao", "corretora"] as const, {
-    required_error: "Selecione um tipo.",
-  }),
+  type: z.custom<AccountType>(
+    (val) => ["conta", "carteira", "cartao", "corretora"].includes(val as string),
+    { message: "Selecione um tipo." }
+  ),
   initialBalance: z.coerce.number({
-    invalid_type_error: "Insira um valor válido.",
+    message: "Insira um valor válido.",
   }),
   initialBalanceDate: z.date({
-    required_error: "A data do saldo é obrigatória.",
+    message: "A data do saldo é obrigatória.",
   }),
 })
 
@@ -52,7 +55,7 @@ export function AccountFormSheet({ onSubmit }: AccountFormSheetProps) {
     reset,
     formState: { errors },
   } = useForm<FormValues>({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(schema) as any,
     mode: "onTouched",
     defaultValues: {
       name: "",

@@ -94,6 +94,7 @@ export const debtsService = {
     }
 
     return {
+       simulationType: dto.simulationType,
        months,
        totalPaid: balance + totalInterest,
        totalInterest,

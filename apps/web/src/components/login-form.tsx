@@ -4,6 +4,8 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import { cn } from "@/lib/utils"
+import { api } from "@/lib/api"
+import { loginAction } from "@/app/actions/auth"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import {
@@ -42,9 +44,18 @@ export function LoginForm({
   })
 
   const processForm = async (data: FormValues) => {
-    // Simulando uma requisição
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    console.log("Login Form Data:", data)
+    try {
+      const response = await loginAction(data)
+      if (response.success) {
+        console.log("Login concluído:", response.user)
+        window.location.href = '/home'
+      } else {
+        alert(response.error)
+      }
+    } catch (error: any) {
+      console.error("Erro no login:", error)
+      alert("Erro ao realizar login.")
+    }
   }
 
   return (

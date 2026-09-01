@@ -13,7 +13,7 @@ import type { OrganizationType } from "@/types/enums"
 export default function OrganizationPage() {
   const [form, setForm] = useState({
     name: "Marcos Família",
-    type: "familia" as OrganizationType,
+    type: "pessoal" as OrganizationType,
   })
 
   return (
@@ -61,7 +61,7 @@ export default function OrganizationPage() {
             </Select>
           </div>
           
-          {(form.type === "mei" || form.type === "pme") && (
+          {(form.type === "empresarial") && (
             <div className="flex flex-col gap-2">
               <Label htmlFor="orgCnpj">CNPJ</Label>
               <Input 

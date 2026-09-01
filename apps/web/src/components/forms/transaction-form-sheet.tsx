@@ -26,17 +26,18 @@ import { mockCategories } from "@/mocks/categories"
 import { Plus, Save } from "lucide-react"
 
 const schema = z.object({
-  type: z.enum(["entrada", "saida", "transferencia"] as const, {
-    required_error: "Selecione um tipo.",
-  }),
+  type: z.custom<TransactionType>(
+    (val) => ["entrada", "saida", "transferencia"].includes(val as string),
+    { message: "Selecione um tipo." }
+  ),
   accountId: z.string().min(1, "Conta de origem é obrigatória."),
   accountIdDest: z.string().optional(),
   categoryId: z.string().optional(),
   amount: z.coerce.number({
-    invalid_type_error: "Insira um valor válido.",
+    message: "Insira um valor válido.",
   }).min(0.01, "O valor deve ser maior que zero."),
   date: z.date({
-    required_error: "A data é obrigatória.",
+    message: "A data é obrigatória.",
   }),
   description: z.string().optional(),
 }).superRefine((data, ctx) => {
@@ -66,7 +67,7 @@ export function TransactionFormSheet({ onSubmit }: TransactionFormSheetProps) {
     watch,
     formState: { errors },
   } = useForm<FormValues>({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(schema) as any,
     mode: "onTouched",
     defaultValues: {
       type: "saida",

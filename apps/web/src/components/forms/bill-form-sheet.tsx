@@ -26,15 +26,16 @@ import { Plus, Save } from "lucide-react"
 
 const schema = z.object({
   amount: z.coerce.number({
-    invalid_type_error: "Insira um valor válido.",
+    message: "Insira um valor válido.",
   }).min(0.01, "O valor não pode ser zero."),
   dueDate: z.date({
-    required_error: "A data de vencimento é obrigatória.",
+    message: "A data de vencimento é obrigatória.",
   }),
   categoryId: z.string().optional(),
-  recurrence: z.enum(["nenhuma", "mensal", "anual"] as const, {
-    required_error: "Selecione uma recorrência.",
-  }),
+  recurrence: z.custom<BillRecurrence>(
+    (val) => ["nenhuma", "mensal", "anual"].includes(val as string),
+    { message: "Selecione uma recorrência." }
+  ),
   description: z.string().min(1, "A descrição é obrigatória."),
 })
 
@@ -57,7 +58,7 @@ export function BillFormSheet({ type, buttonLabel, onSubmit }: BillFormSheetProp
     reset,
     formState: { errors },
   } = useForm<FormValues>({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(schema) as any,
     mode: "onTouched",
     defaultValues: {
       amount: 0,

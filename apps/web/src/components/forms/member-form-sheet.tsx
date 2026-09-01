@@ -25,9 +25,10 @@ import { UserPlus, Save } from "lucide-react"
 const schema = z.object({
   name: z.string().min(1, "O nome do membro é obrigatório."),
   email: z.string().email("Insira um e-mail válido."),
-  role: z.enum(["owner", "gestor", "membro"] as const, {
-    required_error: "Selecione uma função.",
-  }),
+  role: z.custom<UserRole>(
+    (val) => ["owner", "gestor", "membro"].includes(val as string),
+    { message: "Selecione uma função." }
+  ),
 })
 
 type FormValues = z.infer<typeof schema>

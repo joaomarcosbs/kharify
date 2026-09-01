@@ -108,7 +108,6 @@ export default function AppearancePage() {
                     className="size-8 rounded-full ring-2 ring-offset-2 ring-offset-background transition-all"
                     style={{ 
                       backgroundColor: color.value,
-                      ringColor: accent === color.name ? color.value : "transparent",
                       boxShadow: accent === color.name ? `0 0 0 2px ${color.value}` : "none"
                     }}
                   />

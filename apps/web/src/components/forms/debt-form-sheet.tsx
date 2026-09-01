@@ -23,12 +23,12 @@ import { Plus, Save } from "lucide-react"
 const schema = z.object({
   name: z.string().min(1, "O nome da dívida é obrigatório."),
   originalAmount: z.coerce.number({
-    invalid_type_error: "Insira um valor válido.",
+    message: "Insira um valor válido.",
   }).min(0.01, "O valor deve ser maior que zero."),
   interestRateMonth: z.coerce.number().optional().or(z.literal("")),
   totalInstallments: z.coerce.number().optional().or(z.literal("")),
   startDate: z.date({
-    required_error: "A data de início é obrigatória.",
+    message: "A data de início é obrigatória.",
   }),
 })
 
@@ -54,7 +54,7 @@ export function DebtFormSheet({ onSubmit }: DebtFormSheetProps) {
     reset,
     formState: { errors },
   } = useForm<FormValues>({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(schema) as any,
     mode: "onBlur",
     defaultValues: {
       name: "",

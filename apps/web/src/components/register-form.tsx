@@ -4,6 +4,8 @@ import { useForm, Controller } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import { cn } from "@/lib/utils"
+import { api } from "@/lib/api"
+import { registerAction } from "@/app/actions/auth"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import {
@@ -26,9 +28,10 @@ const schema = z.object({
   email: z.string().email("Insira um e-mail válido."),
   password: z.string().min(8, "A senha deve ter no mínimo 8 caracteres."),
   organizationName: z.string().min(1, "O nome da organização é obrigatório."),
-  organizationType: z.enum(["pessoal", "empresarial"] as const, {
-    required_error: "Selecione um tipo.",
-  }),
+  organizationType: z.custom<OrganizationType>(
+    (val) => ["pessoal", "empresarial"].includes(val as string),
+    { message: "Selecione um tipo." }
+  ),
   document: z.string()
     .min(1, "O documento é obrigatório para emissão de notas fiscais.")
     .refine((val) => isValidDocument(val), "Documento inválido. Insira um CPF ou CNPJ válido.")
@@ -59,9 +62,18 @@ export function RegisterForm({
   })
 
   const processForm = async (data: FormValues) => {
-    // Simulando uma requisição
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    console.log("Register Form Data:", data)
+    try {
+      const response = await registerAction(data)
+      if (response.success) {
+        console.log("Cadastro concluído:", response.user)
+        window.location.href = '/home'
+      } else {
+        alert(response.error)
+      }
+    } catch (error: any) {
+      console.error("Erro no cadastro:", error)
+      alert("Erro ao realizar cadastro.")
+    }
   }
 
   return (
