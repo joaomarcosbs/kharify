@@ -1,8 +1,8 @@
-"use server"
+"use server";
 
-import { cookies } from "next/headers"
+import { cookies } from "next/headers";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://api:3000" // Internally Docker can reach api:3000. Wait, docker-compose uses proxy, maybe we can reach http://api:3000 directly.
+const API_URL = process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:3080/v1";
 
 export async function loginAction(data: any) {
   try {
@@ -10,29 +10,35 @@ export async function loginAction(data: any) {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
-    })
+    });
 
     if (!response.ok) {
-      const errorData = await response.json()
-      return { success: false, error: errorData.message || "E-mail ou senha inválidos." }
+      const errorData = await response.json();
+      return { success: false, error: errorData.message || "E-mail ou senha inválidos." };
     }
 
-    const result = await response.json()
+    const result = await response.json();
+    const token = result.data?.access_token || result.access_token;
+    const user = result.data?.user || result.user;
+    const organizationId = result.data?.organizationId || result.organizationId;
 
-    // Store token in HttpOnly cookie
-    const cookieStore = await cookies()
-    cookieStore.set("kharify_token", result.access_token, {
+    if (!token) {
+      return { success: false, error: "Token de autenticação não recebido da API." };
+    }
+
+    const cookieStore = await cookies();
+    cookieStore.set("kharify_token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       path: "/",
-      maxAge: 60 * 60 * 24 * 7, // 7 days
+      maxAge: 60 * 60 * 24 * 7,
       sameSite: "lax",
-    })
+    });
 
-    return { success: true, user: result.user }
+    return { success: true, user, token, organizationId };
   } catch (error) {
-    console.error("Erro no server action login:", error)
-    return { success: false, error: "Erro interno de comunicação com a API." }
+    console.error("Erro no server action login:", error);
+    return { success: false, error: "Erro interno de comunicação com a API." };
   }
 }
 
@@ -42,34 +48,40 @@ export async function registerAction(data: any) {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
-    })
+    });
 
     if (!response.ok) {
-      const errorData = await response.json()
-      return { success: false, error: errorData.message || "Erro ao realizar cadastro." }
+      const errorData = await response.json();
+      return { success: false, error: errorData.message || "Erro ao realizar cadastro." };
     }
 
-    const result = await response.json()
+    const result = await response.json();
+    const token = result.data?.access_token || result.access_token;
+    const user = result.data?.user || result.user;
+    const organizationId = result.data?.organizationId || result.organizationId;
 
-    // Store token in HttpOnly cookie
-    const cookieStore = await cookies()
-    cookieStore.set("kharify_token", result.access_token, {
+    if (!token) {
+      return { success: false, error: "Token de autenticação não recebido da API." };
+    }
+
+    const cookieStore = await cookies();
+    cookieStore.set("kharify_token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       path: "/",
-      maxAge: 60 * 60 * 24 * 7, // 7 days
+      maxAge: 60 * 60 * 24 * 7,
       sameSite: "lax",
-    })
+    });
 
-    return { success: true, user: result.user }
+    return { success: true, user, token, organizationId };
   } catch (error) {
-    console.error("Erro no server action register:", error)
-    return { success: false, error: "Erro interno de comunicação com a API." }
+    console.error("Erro no server action register:", error);
+    return { success: false, error: "Erro interno de comunicação com a API." };
   }
 }
 
 export async function logoutAction() {
-  const cookieStore = await cookies()
-  cookieStore.delete("kharify_token")
-  return { success: true }
+  const cookieStore = await cookies();
+  cookieStore.delete("kharify_token");
+  return { success: true };
 }

@@ -21,7 +21,7 @@ export interface UserSubscription {
   nextBillingDate: string
 }
 
-const mockSettings: UserSettings = {
+const defaultSettings: UserSettings = {
   id: "stg-1",
   theme: "system",
   density: "comfortable",
@@ -45,15 +45,22 @@ const mockSubscription: UserSubscription = {
 
 export const settingsService = {
   getSettings: async (): Promise<UserSettings> => {
-    // Simulando chamada de API
-    await new Promise((resolve) => setTimeout(resolve, 300))
-    return mockSettings
+    try {
+      if (typeof window !== "undefined") {
+        const raw = localStorage.getItem('kharify_settings')
+        if (raw) return JSON.parse(raw)
+      }
+    } catch {}
+    return defaultSettings
   },
 
   updateSettings: async (updates: Partial<UserSettings>): Promise<UserSettings> => {
-    await new Promise((resolve) => setTimeout(resolve, 500))
-    Object.assign(mockSettings, updates)
-    return mockSettings
+    const current = await settingsService.getSettings()
+    const next = { ...current, ...updates }
+    if (typeof window !== "undefined") {
+      localStorage.setItem('kharify_settings', JSON.stringify(next))
+    }
+    return next
   },
 
   getSubscription: async (): Promise<UserSubscription> => {

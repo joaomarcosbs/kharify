@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Lora } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
+import { GlobalLoadingOverlay } from "@/components/global-loading-overlay";
+import { Toaster } from "sonner";
 import "./globals.css";
 
 const lora = Lora({
@@ -27,9 +29,12 @@ export default function RootLayout({
           defaultTheme="system"
           enableSystem
         >
+          <GlobalLoadingOverlay />
+          <Toaster richColors position="top-right" />
           {children}
         </ThemeProvider>
       </body>
     </html>
   );
 }
+

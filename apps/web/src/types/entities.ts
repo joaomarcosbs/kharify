@@ -51,6 +51,8 @@ export interface Account {
   initialBalance: number
   initialBalanceDate: string
   runtimeBalance?: number
+  pluggyAccountId?: string | null
+  pluggyItemId?: string | null
   createdAt: string
 }
 
@@ -105,6 +107,7 @@ export interface Transaction {
   date: string
   description?: string | null
   origin: TransactionOrigin
+  pluggyTransactionId?: string | null
   createdAt: string
   // Relações expandidas
   account?: Account | null
@@ -146,3 +149,16 @@ export interface SimulationResult {
   totalInterest: number
   months: number
 }
+
+export interface PluggyItem {
+  id: string
+  organizationId: string
+  pluggyItemId: string
+  connectorId: number
+  connectorName: string
+  status: string
+  lastSyncedAt: string
+  createdAt: string
+  accounts?: Account[]
+}
+

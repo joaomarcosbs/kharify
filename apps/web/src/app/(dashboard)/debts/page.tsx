@@ -10,32 +10,35 @@ import { useFormat } from "@/hooks/use-format"
 import { DEBT_STATUSES, SIMULATION_TYPES } from "@/types/enums"
 import { DataTable } from "@/components/dashboard/data-table"
 import { DebtSimulationChart } from "@/components/dashboard/debt-simulation-chart"
+import { RowActions } from "@/components/dashboard/row-actions"
 import { Button } from "@/components/ui/button"
 import { TrendingDown, Calculator, ChevronDown, ChevronUp } from "lucide-react"
 import { DebtFormSheet } from "@/components/forms/debt-form-sheet"
-import { mockSimulationPrice, mockSimulationSAC } from "@/mocks/debts"
 import { CategoryDonutChart } from "@/components/dashboard/category-donut-chart"
 import { Input } from "@/components/ui/input"
 
 export default function DividasPage() {
   const [debts, setDebts] = useState<Debt[]>([])
+  const [editingDebt, setEditingDebt] = useState<Debt | null>(null)
   const [totalDebt, setTotalDebt] = useState(0)
   const [activeSimulation, setActiveSimulation] = useState<string | null>(null)
   const [simulationType, setSimulationType] = useState<SimulationType>("price")
   const [simulationResult, setSimulationResult] = useState<SimulationResult | null>(null)
+  const [simulationResultSAC, setSimulationResultSAC] = useState<SimulationResult | null>(null)
   const [showFullTable, setShowFullTable] = useState(false)
   const [extraPayment, setExtraPayment] = useState<string>("500")
   const { formatCurrency } = useFormat()
 
+  const load = async () => {
+    const [allDebts, total] = await Promise.all([
+      debtsService.findAll(),
+      debtsService.getTotalDebt(),
+    ])
+    setDebts(allDebts)
+    setTotalDebt(total)
+  }
+
   useEffect(() => {
-    async function load() {
-      const [allDebts, total] = await Promise.all([
-        debtsService.findAll(),
-        debtsService.getTotalDebt(),
-      ])
-      setDebts(allDebts)
-      setTotalDebt(total)
-    }
     load()
   }, [])
 
@@ -44,18 +47,29 @@ export default function DividasPage() {
       const handler = setTimeout(() => {
         const amount = Number(extraPayment)
         if (!isNaN(amount) && amount >= 0) {
-          debtsService.simulate(activeSimulation, {
-            simulationType,
-            simulationMode: "extraPayment",
-            extraPaymentAmount: amount,
-          }).then(setSimulationResult)
+          Promise.all([
+            debtsService.simulate(activeSimulation, {
+              simulationType: "price",
+              simulationMode: "extraPayment",
+              extraPaymentAmount: amount,
+            }),
+            debtsService.simulate(activeSimulation, {
+              simulationType: "sac",
+              simulationMode: "extraPayment",
+              extraPaymentAmount: amount,
+            }),
+          ]).then(([price, sac]) => {
+            setSimulationResult(price)
+            setSimulationResultSAC(sac)
+          })
         }
       }, 500)
       return () => clearTimeout(handler)
     } else {
       setSimulationResult(null)
+      setSimulationResultSAC(null)
     }
-  }, [activeSimulation, simulationType, extraPayment])
+  }, [activeSimulation, extraPayment])
 
   function handleSimulate(debtId: string) {
     if (activeSimulation === debtId) {
@@ -75,7 +89,7 @@ export default function DividasPage() {
       <PageHeader
         title="Dívidas"
         description="Acompanhe suas dívidas e simule estratégias de quitação."
-        actions={<DebtFormSheet />}
+        actions={<DebtFormSheet onDebtSaved={load} />}
       />
 
       {/* Resumo */}
@@ -107,12 +121,22 @@ export default function DividasPage() {
                 <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6">
                   {/* Info */}
                   <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-4">
-                      <h3 className="text-xl font-semibold">{debt.name}</h3>
-                      <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium ${debt.status === "ativa" ? "bg-amber-400/10 text-amber-400" : "bg-emerald-500/10 text-emerald-500"
-                        }`}>
-                        {DEBT_STATUSES[debt.status]}
-                      </span>
+                    <div className="flex items-center justify-between gap-3 mb-4">
+                      <div className="flex items-center gap-3">
+                        <h3 className="text-xl font-semibold">{debt.name}</h3>
+                        <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium ${debt.status === "ativa" ? "bg-amber-400/10 text-amber-400" : "bg-emerald-500/10 text-emerald-500"
+                          }`}>
+                          {DEBT_STATUSES[debt.status]}
+                        </span>
+                      </div>
+                      <RowActions
+                        deleteConfirmMessage={`Tem certeza que deseja excluir a dívida "${debt.name}"?`}
+                        onEdit={() => setEditingDebt(debt)}
+                        onDelete={async () => {
+                          await debtsService.remove(debt.id)
+                          load()
+                        }}
+                      />
                     </div>
 
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mt-2">
@@ -210,23 +234,31 @@ export default function DividasPage() {
                   ) : (
                     <div className="relative z-10 animate-in fade-in duration-300">
                       {/* Resumo da simulação */}
-                      <div className="grid grid-cols-3 gap-4 mb-6">
-                        <div className="rounded-xl bg-background/60 dark:bg-sidebar/60 p-4 border border-border/20">
-                          <p className="text-xs text-muted-foreground mb-1">Meses até quitar</p>
-                          <p className="text-2xl font-semibold tracking-tight">{simulationResult.months}</p>
-                        </div>
-                        <div className="rounded-xl bg-background/60 dark:bg-sidebar/60 p-4 border border-border/20">
-                          <p className="text-xs text-muted-foreground mb-1">Total pago</p>
-                          <p className="text-2xl font-semibold tracking-tight">{formatCurrency(simulationResult.totalPaid)}</p>
-                        </div>
-                        <div className="rounded-xl bg-emerald-500/5 border border-emerald-500/10 p-4">
-                          <p className="text-xs text-emerald-500 mb-1">Total de juros</p>
-                          <p className="text-2xl font-semibold tracking-tight text-emerald-500">{formatCurrency(simulationResult.totalInterest)}</p>
-                        </div>
-                      </div>
+                      {(() => {
+                        const activeResult = simulationType === "sac" ? simulationResultSAC : simulationResult
+                        if (!activeResult) return null
+                        return (
+                          <div className="grid grid-cols-3 gap-4 mb-6">
+                            <div className="rounded-xl bg-background/60 dark:bg-sidebar/60 p-4 border border-border/20">
+                              <p className="text-xs text-muted-foreground mb-1">Meses até quitar</p>
+                              <p className="text-2xl font-semibold tracking-tight">{activeResult.months}</p>
+                            </div>
+                            <div className="rounded-xl bg-background/60 dark:bg-sidebar/60 p-4 border border-border/20">
+                              <p className="text-xs text-muted-foreground mb-1">Total pago</p>
+                              <p className="text-2xl font-semibold tracking-tight">{formatCurrency(activeResult.totalPaid)}</p>
+                            </div>
+                            <div className="rounded-xl bg-emerald-500/5 border border-emerald-500/10 p-4">
+                              <p className="text-xs text-emerald-500 mb-1">Total de juros</p>
+                              <p className="text-2xl font-semibold tracking-tight text-emerald-500">{formatCurrency(activeResult.totalInterest)}</p>
+                            </div>
+                          </div>
+                        )
+                      })()}
 
                       {/* Gráfico Price vs SAC */}
-                      <DebtSimulationChart priceData={mockSimulationPrice} sacData={mockSimulationSAC} />
+                      {simulationResult && simulationResultSAC && (
+                        <DebtSimulationChart priceData={simulationResult} sacData={simulationResultSAC} />
+                      )}
 
                       {/* Tabela de amortização */}
                       <div className="flex items-center justify-between mb-4 mt-6">
@@ -241,7 +273,11 @@ export default function DividasPage() {
                       </div>
 
                       <DataTable
-                        data={showFullTable ? simulationResult.rows : simulationResult.rows.slice(0, 6)}
+                        data={(() => {
+                          const activeResult = simulationType === "sac" ? simulationResultSAC : simulationResult
+                          if (!activeResult) return []
+                          return showFullTable ? activeResult.rows : activeResult.rows.slice(0, 6)
+                        })()}
                         columns={[
                           {
                             accessorKey: "monthIndex",
@@ -278,6 +314,13 @@ export default function DividasPage() {
           )
         })}
       </div>
+
+      <DebtFormSheet
+        initialData={editingDebt}
+        open={!!editingDebt}
+        onOpenChange={(open) => !open && setEditingDebt(null)}
+        onDebtSaved={load}
+      />
     </div>
   )
 }

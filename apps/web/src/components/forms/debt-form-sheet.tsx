@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useForm, Controller } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
@@ -18,6 +18,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { DatePicker } from "@/components/ui/date-picker"
 import { FieldError } from "@/components/ui/field"
+import type { Debt } from "@/types/entities"
+import { debtsService } from "@/services/debts.service"
 import { Plus, Save } from "lucide-react"
 
 const schema = z.object({
@@ -35,6 +37,9 @@ const schema = z.object({
 type FormValues = z.infer<typeof schema>
 
 interface DebtFormSheetProps {
+  initialData?: Debt | null
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
   onSubmit?: (data: {
     name: string
     originalAmount: number
@@ -42,10 +47,27 @@ interface DebtFormSheetProps {
     totalInstallments?: number
     startDate: string
   }) => void
+  onDebtSaved?: () => void
 }
 
-export function DebtFormSheet({ onSubmit }: DebtFormSheetProps) {
-  const [open, setOpen] = useState(false)
+export function DebtFormSheet({
+  initialData,
+  open: controlledOpen,
+  onOpenChange: setControlledOpen,
+  onSubmit,
+  onDebtSaved,
+}: DebtFormSheetProps) {
+  const [internalOpen, setInternalOpen] = useState(false)
+  const isControlled = controlledOpen !== undefined
+  const open = isControlled ? controlledOpen : internalOpen
+
+  const setOpen = (newOpen: boolean) => {
+    if (isControlled) {
+      setControlledOpen?.(newOpen)
+    } else {
+      setInternalOpen(newOpen)
+    }
+  }
 
   const {
     register,
@@ -65,16 +87,47 @@ export function DebtFormSheet({ onSubmit }: DebtFormSheetProps) {
     },
   })
 
-  const processForm = (data: FormValues) => {
-    onSubmit?.({
+  useEffect(() => {
+    if (initialData) {
+      reset({
+        name: initialData.name,
+        originalAmount: initialData.originalAmount,
+        interestRateMonth: initialData.interestRateMonth ?? "",
+        totalInstallments: initialData.totalInstallments ?? "",
+        startDate: initialData.startDate ? new Date(initialData.startDate) : new Date(),
+      })
+    } else {
+      reset({
+        name: "",
+        originalAmount: 0,
+        interestRateMonth: "",
+        totalInstallments: "",
+        startDate: new Date(),
+      })
+    }
+  }, [initialData, reset, open])
+
+  const processForm = async (data: FormValues) => {
+    const payload = {
       name: data.name,
       originalAmount: Number(data.originalAmount),
       interestRateMonth: data.interestRateMonth ? Number(data.interestRateMonth) : undefined,
       totalInstallments: data.totalInstallments ? Number(data.totalInstallments) : undefined,
       startDate: data.startDate.toISOString().split("T")[0],
-    })
+    }
+    if (onSubmit) {
+      onSubmit(payload)
+    } else if (initialData) {
+      await debtsService.update(initialData.id, payload)
+    } else {
+      await debtsService.create({
+        ...payload,
+        status: "ativa",
+      })
+    }
     reset()
     setOpen(false)
+    onDebtSaved?.()
   }
 
   const handleOpenChange = (newOpen: boolean) => {
@@ -84,14 +137,20 @@ export function DebtFormSheet({ onSubmit }: DebtFormSheetProps) {
 
   return (
     <Sheet open={open} onOpenChange={handleOpenChange}>
-      <SheetTrigger render={<Button className="rounded-xl gap-2" />}>
-        <Plus className="size-4" />
-        Nova Dívida
-      </SheetTrigger>
+      {!isControlled && (
+        <SheetTrigger render={<Button className="rounded-xl gap-2" />}>
+          <Plus className="size-4" />
+          Nova Dívida
+        </SheetTrigger>
+      )}
       <SheetContent className="sm:max-w-[440px] overflow-y-auto">
         <SheetHeader>
-          <SheetTitle>Nova Dívida</SheetTitle>
-          <SheetDescription>Cadastre uma dívida para acompanhar e simular quitação.</SheetDescription>
+          <SheetTitle>{initialData ? "Editar Dívida" : "Nova Dívida"}</SheetTitle>
+          <SheetDescription>
+            {initialData
+              ? "Atualize as informações do seu passivo ou financiamento."
+              : "Cadastre uma dívida para acompanhar e simular quitação."}
+          </SheetDescription>
         </SheetHeader>
 
         <form onSubmit={handleSubmit(processForm)} className="flex flex-col gap-5 mt-6 w-full">
@@ -165,7 +224,7 @@ export function DebtFormSheet({ onSubmit }: DebtFormSheetProps) {
 
           <Button type="submit" className="rounded-xl gap-2 mt-4">
             <Save className="size-4" />
-            Criar Dívida
+            {initialData ? "Salvar Alterações" : "Criar Dívida"}
           </Button>
         </form>
       </SheetContent>

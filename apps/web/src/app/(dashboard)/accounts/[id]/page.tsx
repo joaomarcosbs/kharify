@@ -12,7 +12,8 @@ import { transactionsService } from "@/services/transactions.service"
 import { formatDate } from "@/lib/format"
 import { useFormat } from "@/hooks/use-format"
 import { ACCOUNT_TYPES, TRANSACTION_TYPES } from "@/types/enums"
-import { mockCategories } from "@/mocks/categories"
+import { categoriesService } from "@/services/categories.service"
+import type { Category } from "@/types/entities"
 import { Wallet, Landmark, CreditCard, BarChart3, ArrowDownLeft, ArrowUpRight, ArrowLeftRight } from "lucide-react"
 
 const typeIcons = {
@@ -35,26 +36,30 @@ const txTypeConfig = {
   transferencia: { icon: ArrowLeftRight, color: "text-blue-400", bg: "bg-blue-400/10" },
 }
 
-const getCategoryName = (id?: string | null) => {
-  if (!id) return "—"
-  return mockCategories.find((c) => c.id === id)?.name ?? "—"
-}
-
 export default function AccountDetailPage() {
   const params = useParams()
   const accountId = params.id as string
 
   const [account, setAccount] = useState<Account | null>(null)
   const [transactions, setTransactions] = useState<Transaction[]>([])
+  const [categories, setCategories] = useState<Category[]>([])
   const { formatCurrency } = useFormat()
+
+  const getCategoryName = (id?: string | null) => {
+    if (!id) return "—"
+    return categories.find((c) => c.id === id)?.name ?? "—"
+  }
 
   useEffect(() => {
     async function load() {
-      const acc = await accountsService.findOne(accountId)
+      const [acc, allTx, cats] = await Promise.all([
+        accountsService.findOne(accountId),
+        transactionsService.findAll(),
+        categoriesService.findAll(),
+      ])
       if (acc) setAccount(acc)
-
-      const allTx = await transactionsService.findAll()
       setTransactions(allTx.filter((t) => t.accountId === accountId || t.accountIdDest === accountId))
+      setCategories(cats)
     }
     load()
   }, [accountId])

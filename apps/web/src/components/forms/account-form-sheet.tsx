@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useForm, Controller } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
@@ -21,6 +21,8 @@ import { DatePicker } from "@/components/ui/date-picker"
 import { FieldError } from "@/components/ui/field"
 import { ACCOUNT_TYPES } from "@/types/enums"
 import type { AccountType } from "@/types/enums"
+import type { Account } from "@/types/entities"
+import { accountsService } from "@/services/accounts.service"
 import { Plus, Save } from "lucide-react"
 
 const ACCOUNT_TYPE_VALUES = ["conta", "carteira", "cartao", "corretora"] as const;
@@ -42,11 +44,31 @@ const schema = z.object({
 type FormValues = z.infer<typeof schema>
 
 interface AccountFormSheetProps {
+  initialData?: Account | null
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
   onSubmit?: (data: FormValues) => void
+  onAccountCreated?: () => void
 }
 
-export function AccountFormSheet({ onSubmit }: AccountFormSheetProps) {
-  const [open, setOpen] = useState(false)
+export function AccountFormSheet({
+  initialData,
+  open: controlledOpen,
+  onOpenChange: setControlledOpen,
+  onSubmit,
+  onAccountCreated,
+}: AccountFormSheetProps) {
+  const [internalOpen, setInternalOpen] = useState(false)
+  const isControlled = controlledOpen !== undefined
+  const open = isControlled ? controlledOpen : internalOpen
+
+  const setOpen = (newOpen: boolean) => {
+    if (isControlled) {
+      setControlledOpen?.(newOpen)
+    } else {
+      setInternalOpen(newOpen)
+    }
+  }
 
   const {
     register,
@@ -65,10 +87,43 @@ export function AccountFormSheet({ onSubmit }: AccountFormSheetProps) {
     },
   })
 
-  const processForm = (data: FormValues) => {
-    onSubmit?.(data)
+  useEffect(() => {
+    if (initialData) {
+      reset({
+        name: initialData.name,
+        type: initialData.type,
+        initialBalance: initialData.initialBalance,
+        initialBalanceDate: initialData.initialBalanceDate ? new Date(initialData.initialBalanceDate) : new Date(),
+      })
+    } else {
+      reset({
+        name: "",
+        type: "conta",
+        initialBalance: 0,
+        initialBalanceDate: new Date(),
+      })
+    }
+  }, [initialData, reset, open])
+
+  const processForm = async (data: FormValues) => {
+    if (onSubmit) {
+      onSubmit(data)
+    } else if (initialData) {
+      await accountsService.update(initialData.id, {
+        name: data.name,
+        type: data.type,
+      })
+    } else {
+      await accountsService.create({
+        name: data.name,
+        type: data.type,
+        initialBalance: data.initialBalance,
+        initialBalanceDate: data.initialBalanceDate.toISOString().split("T")[0],
+      })
+    }
     reset()
     setOpen(false)
+    onAccountCreated?.()
   }
 
   const handleOpenChange = (newOpen: boolean) => {
@@ -78,14 +133,20 @@ export function AccountFormSheet({ onSubmit }: AccountFormSheetProps) {
 
   return (
     <Sheet open={open} onOpenChange={handleOpenChange}>
-      <SheetTrigger render={<Button className="rounded-xl gap-2" />}>
-        <Plus className="size-4" />
-        Nova Conta
-      </SheetTrigger>
+      {!isControlled && (
+        <SheetTrigger render={<Button className="rounded-xl gap-2" />}>
+          <Plus className="size-4" />
+          Nova Conta
+        </SheetTrigger>
+      )}
       <SheetContent className="sm:max-w-[440px] overflow-y-auto">
         <SheetHeader>
-          <SheetTitle>Nova Conta Bancária</SheetTitle>
-          <SheetDescription>Adicione uma nova conta para acompanhar seus saldos.</SheetDescription>
+          <SheetTitle>{initialData ? "Editar Conta" : "Nova Conta Bancária"}</SheetTitle>
+          <SheetDescription>
+            {initialData
+              ? "Atualize as informações da conta."
+              : "Adicione uma nova conta para acompanhar seus saldos."}
+          </SheetDescription>
         </SheetHeader>
 
         <form onSubmit={handleSubmit(processForm)} className="flex flex-col gap-5 mt-6 w-full">
@@ -133,6 +194,7 @@ export function AccountFormSheet({ onSubmit }: AccountFormSheetProps) {
                 type="number"
                 step="0.01"
                 placeholder="0,00"
+                disabled={!!initialData}
                 {...register("initialBalance")}
                 aria-invalid={!!errors.initialBalance}
               />
@@ -148,6 +210,7 @@ export function AccountFormSheet({ onSubmit }: AccountFormSheetProps) {
                   <DatePicker
                     value={field.value}
                     onChange={field.onChange}
+                    disabled={!!initialData}
                   />
                 )}
               />
@@ -157,7 +220,7 @@ export function AccountFormSheet({ onSubmit }: AccountFormSheetProps) {
 
           <Button type="submit" className="rounded-xl gap-2 mt-4">
             <Save className="size-4" />
-            Criar Conta
+            {initialData ? "Salvar Alterações" : "Criar Conta"}
           </Button>
         </form>
       </SheetContent>

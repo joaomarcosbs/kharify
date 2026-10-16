@@ -4,6 +4,7 @@ import { PageHeader } from "@/components/page-header"
 import { Button } from "@/components/ui/button"
 import { CheckCircle2, CreditCard, Zap, Download, Users, ArrowLeft } from "lucide-react"
 import Link from "next/link"
+import { toast } from "sonner"
 
 const INVOICES = [
   { id: "INV-001", date: "15 Abr, 2026", amount: "R$ 49,90", status: "Pago" },
@@ -42,7 +43,11 @@ export default function BillingPage() {
                 </h3>
                 <p className="text-sm text-muted-foreground mt-1">Sua próxima fatura de R$ 49,90 será em 15 de Mai, 2026.</p>
               </div>
-              <Button variant="outline" className="rounded-xl border-border/50 shrink-0">
+              <Button
+                variant="outline"
+                className="rounded-xl border-border/50 shrink-0"
+                onClick={() => toast.info('Cancelamento em breve 🚧')}
+              >
                 Cancelar Assinatura
               </Button>
             </div>
@@ -62,7 +67,14 @@ export default function BillingPage() {
           <div className="rounded-[24px] flex flex-col border border-border/50 bg-background dark:bg-sidebar shadow-sm overflow-hidden">
             <div className="p-6 border-b border-border/50 flex items-center justify-between">
               <h3 className="text-base font-semibold">Histórico de Faturas</h3>
-              <Button variant="ghost" size="sm" className="text-primary hover:text-primary/80">Ver todas</Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-primary hover:text-primary/80"
+                onClick={() => toast.info('Em breve 🚧')}
+              >
+                Ver todas
+              </Button>
             </div>
             <div className="flex flex-col">
               {INVOICES.map((inv, index) => (
@@ -80,7 +92,12 @@ export default function BillingPage() {
                     <span className="inline-flex py-1 px-2.5 rounded-md bg-emerald-500/10 text-emerald-500 text-[11px] font-semibold uppercase tracking-wider">
                       {inv.status}
                     </span>
-                    <Button variant="ghost" size="icon" className="size-8 text-muted-foreground">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="size-8 text-muted-foreground"
+                      onClick={() => toast.info('Download em breve 🚧')}
+                    >
                       <Download className="size-4" />
                     </Button>
                   </div>
@@ -113,7 +130,10 @@ export default function BillingPage() {
               <li className="flex items-start gap-2"><CheckCircle2 className="size-4 text-emerald-500 shrink-0" /> Log de Auditoria Completo</li>
               <li className="flex items-start gap-2"><CheckCircle2 className="size-4 text-emerald-500 shrink-0" /> Suporte dedicado via WhatsApp</li>
             </ul>
-            <Button className="w-full rounded-xl gap-2 font-bold hover:-translate-y-0.5 transition-all">
+            <Button
+              className="w-full rounded-xl gap-2 font-bold hover:-translate-y-0.5 transition-all"
+              onClick={() => toast.info('Upgrade em breve 🚧')}
+            >
               <Zap className="size-4" /> Evoluir agora
             </Button>
           </div>

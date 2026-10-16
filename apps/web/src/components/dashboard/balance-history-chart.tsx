@@ -7,6 +7,8 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart"
+import { dashboardService } from "@/services/dashboard.service"
+import { useState, useEffect } from "react"
 
 const chartData = [
   { month: "Nov", entradas: 8200, saidas: 5800 },

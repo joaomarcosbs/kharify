@@ -16,6 +16,8 @@ COPY . .
 
 # Desabilitar telemetria durante o build
 ENV NEXT_TELEMETRY_DISABLED 1
+ARG NEXT_PUBLIC_API_URL=http://localhost:3080/v1
+ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
 
 RUN npm run build
 

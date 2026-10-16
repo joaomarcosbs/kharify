@@ -1,8 +1,7 @@
-import type { Account, Transaction, Bill, Debt } from '@/types/entities'
-import { mockAccounts } from '@/mocks/accounts'
-import { mockTransactions } from '@/mocks/transactions'
-import { mockBills } from '@/mocks/bills'
-import { mockDebts } from '@/mocks/debts'
+import { accountsService } from '@/services/accounts.service'
+import { transactionsService } from '@/services/transactions.service'
+import { billsService } from '@/services/bills.service'
+import { debtsService } from '@/services/debts.service'
 
 export interface SearchResult {
   id: string
@@ -23,11 +22,18 @@ export const searchService = {
   search: async (query: string): Promise<Record<string, SearchResult[]>> => {
     if (!query || query.length < 2) return {}
 
+    const [accounts, transactions, bills, debts] = await Promise.all([
+      accountsService.findAll().catch(() => []),
+      transactionsService.findAll().catch(() => []),
+      billsService.findAll().catch(() => []),
+      debtsService.findAll().catch(() => []),
+    ])
+
     const q = query.toLowerCase()
     const results: SearchResult[] = []
 
     // Search accounts
-    mockAccounts
+    accounts
       .filter((a) => a.name.toLowerCase().includes(q))
       .forEach((a) => {
         results.push({
@@ -40,7 +46,7 @@ export const searchService = {
       })
 
     // Search transactions
-    mockTransactions
+    transactions
       .filter((t) => t.description?.toLowerCase().includes(q))
       .forEach((t) => {
         results.push({
@@ -53,7 +59,7 @@ export const searchService = {
       })
 
     // Search bills
-    mockBills
+    bills
       .filter((b) => b.description?.toLowerCase().includes(q))
       .forEach((b) => {
         results.push({
@@ -66,7 +72,7 @@ export const searchService = {
       })
 
     // Search debts
-    mockDebts
+    debts
       .filter((d) => d.name.toLowerCase().includes(q))
       .forEach((d) => {
         results.push({

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useForm, Controller } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
@@ -21,8 +21,10 @@ import { DatePicker } from "@/components/ui/date-picker"
 import { FieldError } from "@/components/ui/field"
 import { TRANSACTION_TYPES } from "@/types/enums"
 import type { TransactionType } from "@/types/enums"
-import { mockAccounts } from "@/mocks/accounts"
-import { mockCategories } from "@/mocks/categories"
+import type { Account, Category, Transaction } from "@/types/entities"
+import { accountsService } from "@/services/accounts.service"
+import { categoriesService } from "@/services/categories.service"
+import { transactionsService } from "@/services/transactions.service"
 import { Plus, Save } from "lucide-react"
 
 const schema = z.object({
@@ -53,11 +55,39 @@ const schema = z.object({
 type FormValues = z.infer<typeof schema>
 
 interface TransactionFormSheetProps {
+  initialData?: Transaction | null
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
   onSubmit?: (data: FormValues) => void
+  onTransactionSaved?: () => void
 }
 
-export function TransactionFormSheet({ onSubmit }: TransactionFormSheetProps) {
-  const [open, setOpen] = useState(false)
+export function TransactionFormSheet({
+  initialData,
+  open: controlledOpen,
+  onOpenChange: setControlledOpen,
+  onSubmit,
+  onTransactionSaved,
+}: TransactionFormSheetProps) {
+  const [internalOpen, setInternalOpen] = useState(false)
+  const isControlled = controlledOpen !== undefined
+  const open = isControlled ? controlledOpen : internalOpen
+
+  const setOpen = (newOpen: boolean) => {
+    if (isControlled) {
+      setControlledOpen?.(newOpen)
+    } else {
+      setInternalOpen(newOpen)
+    }
+  }
+
+  const [accounts, setAccounts] = useState<Account[]>([])
+  const [categories, setCategories] = useState<Category[]>([])
+
+  useEffect(() => {
+    accountsService.findAll().then(setAccounts)
+    categoriesService.findAll().then(setCategories)
+  }, [open])
 
   const {
     register,
@@ -80,13 +110,60 @@ export function TransactionFormSheet({ onSubmit }: TransactionFormSheetProps) {
     },
   })
 
+  useEffect(() => {
+    if (initialData) {
+      reset({
+        type: initialData.type,
+        accountId: initialData.accountId,
+        accountIdDest: initialData.accountIdDest || "",
+        categoryId: initialData.categoryId || "",
+        amount: initialData.amount,
+        date: initialData.date ? new Date(initialData.date) : new Date(),
+        description: initialData.description || "",
+      })
+    } else {
+      reset({
+        type: "saida",
+        accountId: "",
+        accountIdDest: "",
+        categoryId: "",
+        amount: 0,
+        date: new Date(),
+        description: "",
+      })
+    }
+  }, [initialData, reset, open])
+
   const selectedType = watch("type")
   const selectedAccountId = watch("accountId")
 
-  const processForm = (data: FormValues) => {
-    onSubmit?.(data)
+  const processForm = async (data: FormValues) => {
+    if (onSubmit) {
+      onSubmit(data)
+    } else if (initialData) {
+      await transactionsService.update(initialData.id, {
+        type: data.type,
+        accountId: data.accountId,
+        accountIdDest: data.type === "transferencia" ? data.accountIdDest : undefined,
+        categoryId: data.categoryId || undefined,
+        amount: data.amount,
+        date: data.date.toISOString(),
+        description: data.description || undefined,
+      })
+    } else {
+      await transactionsService.create({
+        type: data.type,
+        accountId: data.accountId,
+        accountIdDest: data.type === "transferencia" ? data.accountIdDest : undefined,
+        categoryId: data.categoryId || undefined,
+        amount: data.amount,
+        date: data.date.toISOString(),
+        description: data.description || undefined,
+      })
+    }
     reset()
     setOpen(false)
+    onTransactionSaved?.()
   }
 
   const handleOpenChange = (newOpen: boolean) => {
@@ -96,14 +173,18 @@ export function TransactionFormSheet({ onSubmit }: TransactionFormSheetProps) {
 
   return (
     <Sheet open={open} onOpenChange={handleOpenChange}>
-      <SheetTrigger render={<Button className="rounded-xl gap-2" />}>
-        <Plus className="size-4" />
-        Novo Lançamento
-      </SheetTrigger>
+      {!isControlled && (
+        <SheetTrigger render={<Button className="rounded-xl gap-2" />}>
+          <Plus className="size-4" />
+          Novo Lançamento
+        </SheetTrigger>
+      )}
       <SheetContent className="sm:max-w-[440px] overflow-y-auto">
         <SheetHeader>
-          <SheetTitle>Novo Lançamento</SheetTitle>
-          <SheetDescription>Registre uma nova movimentação financeira.</SheetDescription>
+          <SheetTitle>{initialData ? "Editar Lançamento" : "Novo Lançamento"}</SheetTitle>
+          <SheetDescription>
+            {initialData ? "Atualize as informações do lançamento financeiro." : "Registre uma nova movimentação financeira."}
+          </SheetDescription>
         </SheetHeader>
 
         <form onSubmit={handleSubmit(processForm)} className="flex flex-col gap-5 mt-6 w-full">
@@ -143,12 +224,12 @@ export function TransactionFormSheet({ onSubmit }: TransactionFormSheetProps) {
                     {/* Using explicit text finding to bypass Base UI ID display issue */}
                     <SelectValue>
                       {field.value 
-                        ? mockAccounts.find((a) => a.id === field.value)?.name 
+                        ? accounts.find((a) => a.id === field.value)?.name 
                         : "Selecione uma conta"}
                     </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
-                    {mockAccounts.map((acc) => (
+                    {accounts.map((acc) => (
                       <SelectItem key={acc.id} value={acc.id}>{acc.name}</SelectItem>
                     ))}
                   </SelectContent>
@@ -169,12 +250,12 @@ export function TransactionFormSheet({ onSubmit }: TransactionFormSheetProps) {
                     <SelectTrigger id="tx-dest" aria-invalid={!!errors.accountIdDest}>
                       <SelectValue>
                         {field.value 
-                          ? mockAccounts.find((a) => a.id === field.value)?.name 
+                          ? accounts.find((a) => a.id === field.value)?.name 
                           : "Selecione a conta destino"}
                       </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
-                      {mockAccounts.filter((a) => a.id !== selectedAccountId).map((acc) => (
+                      {accounts.filter((a) => a.id !== selectedAccountId).map((acc) => (
                         <SelectItem key={acc.id} value={acc.id}>{acc.name}</SelectItem>
                       ))}
                     </SelectContent>
@@ -226,12 +307,12 @@ export function TransactionFormSheet({ onSubmit }: TransactionFormSheetProps) {
                     <SelectTrigger id="tx-category" aria-invalid={!!errors.categoryId}>
                       <SelectValue>
                         {field.value 
-                          ? mockCategories.find((c) => c.id === field.value)?.name 
+                          ? categories.find((c) => c.id === field.value)?.name 
                           : "Opcional"}
                       </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
-                      {mockCategories.map((cat) => (
+                      {categories.map((cat) => (
                         <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
                       ))}
                     </SelectContent>
@@ -255,7 +336,7 @@ export function TransactionFormSheet({ onSubmit }: TransactionFormSheetProps) {
 
           <Button type="submit" className="rounded-xl gap-2 mt-4">
             <Save className="size-4" />
-            Registrar Lançamento
+            {initialData ? "Salvar Alterações" : "Registrar Lançamento"}
           </Button>
         </form>
       </SheetContent>

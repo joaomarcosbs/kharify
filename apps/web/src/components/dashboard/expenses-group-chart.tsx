@@ -1,5 +1,6 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import { Pie, PieChart, Cell } from "recharts"
 import {
   ChartConfig,
@@ -7,9 +8,8 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart"
-import { mockTransactions } from "@/mocks/transactions"
-import { mockCategories } from "@/mocks/categories"
 import { useFormat } from "@/hooks/use-format"
+import { dashboardService } from "@/services/dashboard.service"
 
 const chartConfig = {
   essencial: { label: "Essencial", color: "oklch(0.65 0.2 25)" },
@@ -19,24 +19,29 @@ const chartConfig = {
 
 export function ExpensesByGroupChart() {
   const { formatCurrency } = useFormat()
-  const expensesByGroup = mockTransactions
-    .filter((t) => t.type === "saida" && t.categoryId)
-    .reduce(
-      (acc, t) => {
-        const category = mockCategories.find((c) => c.id === t.categoryId)
-        if (category) {
-          acc[category.groupType] = (acc[category.groupType] || 0) + t.amount
-        }
-        return acc
-      },
-      {} as Record<string, number>
-    )
 
-  const data = [
-    { name: "Essencial", value: expensesByGroup["essencial"] || 0, fill: "var(--color-essencial)" },
-    { name: "Necessário", value: expensesByGroup["necessario"] || 0, fill: "var(--color-necessario)" },
-    { name: "Supérfluo", value: expensesByGroup["superfluo"] || 0, fill: "var(--color-superfluo)" },
-  ]
+  const [data, setData] = useState([
+    { name: "Essencial", value: 0, fill: "var(--color-essencial)" },
+    { name: "Necessário", value: 0, fill: "var(--color-necessario)" },
+    { name: "Supérfluo", value: 0, fill: "var(--color-superfluo)" },
+  ])
+
+  useEffect(() => {
+    dashboardService.getCategoryBreakdown().then((breakdown) => {
+      if (breakdown && breakdown.length > 0) {
+        const grouped: Record<string, number> = { essencial: 0, necessario: 0, superfluo: 0 }
+        for (const item of breakdown) {
+          const grp = (item.groupType || "essencial").toLowerCase()
+          grouped[grp] = (grouped[grp] || 0) + Number(item.amount)
+        }
+        setData([
+          { name: "Essencial", value: grouped["essencial"] || 0, fill: "var(--color-essencial)" },
+          { name: "Necessário", value: grouped["necessario"] || 0, fill: "var(--color-necessario)" },
+          { name: "Supérfluo", value: grouped["superfluo"] || 0, fill: "var(--color-superfluo)" },
+        ])
+      }
+    })
+  }, [])
 
   const total = data.reduce((sum, d) => sum + d.value, 0)
 

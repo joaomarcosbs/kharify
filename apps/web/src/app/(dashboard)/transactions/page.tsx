@@ -4,17 +4,18 @@ import { useEffect, useState, useMemo } from "react"
 import { ColumnDef } from "@tanstack/react-table"
 import { PageHeader } from "@/components/page-header"
 import { DataTable } from "@/components/dashboard/data-table"
-import type { Transaction } from "@/types/entities"
+import type { Transaction, Category, Account } from "@/types/entities"
 import { transactionsService } from "@/services/transactions.service"
+import { categoriesService } from "@/services/categories.service"
+import { accountsService } from "@/services/accounts.service"
 import { formatDate } from "@/lib/format"
 import { useFormat } from "@/hooks/use-format"
 import { TRANSACTION_TYPES } from "@/types/enums"
-import { mockCategories } from "@/mocks/categories"
-import { mockAccounts } from "@/mocks/accounts"
 import { ArrowDownLeft, ArrowUpRight, ArrowLeftRight } from "lucide-react"
 import { TransactionFormSheet } from "@/components/forms/transaction-form-sheet"
 import { TopCategoriesChart } from "@/components/dashboard/top-categories-chart"
 import { StatCard } from "@/components/dashboard/stat-card"
+import { RowActions } from "@/components/dashboard/row-actions"
 
 const typeConfig = {
   entrada: { icon: ArrowDownLeft, color: "text-emerald-500", bg: "bg-emerald-500/10" },
@@ -22,22 +23,27 @@ const typeConfig = {
   transferencia: { icon: ArrowLeftRight, color: "text-blue-400", bg: "bg-blue-400/10" },
 }
 
-const getCategoryName = (id?: string | null) => {
-  if (!id) return "—"
-  return mockCategories.find((c) => c.id === id)?.name ?? "—"
-}
-
-const getAccountName = (id: string) => {
-  return mockAccounts.find((a) => a.id === id)?.name ?? "—"
-}
-
 export default function TransacoesPage() {
   const [transactions, setTransactions] = useState<Transaction[]>([])
+  const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null)
+  const [categories, setCategories] = useState<Category[]>([])
+  const [accounts, setAccounts] = useState<Account[]>([])
   const { formatCurrency } = useFormat()
 
   useEffect(() => {
     transactionsService.findAll().then(setTransactions)
+    categoriesService.findAll().then(setCategories)
+    accountsService.findAll().then(setAccounts)
   }, [])
+
+  const getCategoryName = (id?: string | null) => {
+    if (!id) return "—"
+    return categories.find((c) => c.id === id)?.name ?? "—"
+  }
+
+  const getAccountName = (id: string) => {
+    return accounts.find((a) => a.id === id)?.name ?? "—"
+  }
 
   const totalEntradas = useMemo(() => 
     transactions.filter(t => t.type === 'entrada').reduce((acc, t) => acc + t.amount, 0),
@@ -103,14 +109,32 @@ export default function TransacoesPage() {
         )
       },
     },
-  ], [formatCurrency])
+    {
+      id: "actions",
+      header: "",
+      cell: ({ row }) => {
+        const t = row.original
+        return (
+          <RowActions
+            deleteConfirmMessage="Tem certeza que deseja excluir esta transação?"
+            onEdit={() => setEditingTransaction(t)}
+            onDelete={async () => {
+              await transactionsService.remove(t.id)
+              const updated = await transactionsService.findAll()
+              setTransactions(updated)
+            }}
+          />
+        )
+      },
+    },
+  ], [formatCurrency, categories, accounts])
 
   return (
     <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-8">
       <PageHeader
         title="Transações"
         description="Histórico de todas as movimentações financeiras."
-        actions={<TransactionFormSheet />}
+        actions={<TransactionFormSheet onTransactionSaved={() => transactionsService.findAll().then(setTransactions)} />}
       />
 
       {/* Resumo e Gráfico */}
@@ -142,6 +166,13 @@ export default function TransacoesPage() {
         emptyMessage="Nenhuma transação encontrada"
         searchKey="description"
         searchPlaceholder="Buscar por descrição..."
+      />
+
+      <TransactionFormSheet
+        initialData={editingTransaction}
+        open={!!editingTransaction}
+        onOpenChange={(open) => !open && setEditingTransaction(null)}
+        onTransactionSaved={() => transactionsService.findAll().then(setTransactions)}
       />
     </div>
   )

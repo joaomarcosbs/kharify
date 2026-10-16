@@ -9,14 +9,15 @@ export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route))
+  const hasValidToken = !!token && token !== 'undefined' && token !== 'null' && token.trim().length > 0
 
   // Se não tem token e a rota não é pública, redireciona pro login
-  if (!token && !isPublicRoute && pathname !== '/') {
+  if (!hasValidToken && !isPublicRoute && pathname !== '/') {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
   // Se tem token e tenta acessar login/register, manda pro dashboard
-  if (token && (pathname === '/login' || pathname === '/register' || pathname === '/')) {
+  if (hasValidToken && (pathname === '/login' || pathname === '/register' || pathname === '/')) {
     return NextResponse.redirect(new URL('/home', request.url))
   }
 

@@ -4,27 +4,23 @@ import { useEffect, useState, useMemo } from "react"
 import { ColumnDef } from "@tanstack/react-table"
 import { PageHeader } from "@/components/page-header"
 import { DataTable } from "@/components/dashboard/data-table"
-import type { Bill } from "@/types/entities"
+import type { Bill, Category } from "@/types/entities"
 import type { BillType } from "@/types/enums"
 import { billsService } from "@/services/bills.service"
+import { categoriesService } from "@/services/categories.service"
 import { formatDate } from "@/lib/format"
 import { useFormat } from "@/hooks/use-format"
 import { BILL_STATUSES, BILL_RECURRENCES } from "@/types/enums"
-import { mockCategories } from "@/mocks/categories"
 import { ArrowDownLeft, ArrowUpRight } from "lucide-react"
 import { BillFormSheet } from "@/components/forms/bill-form-sheet"
 import { CategoryDonutChart } from "@/components/dashboard/category-donut-chart"
+import { RowActions } from "@/components/dashboard/row-actions"
 
 const statusConfig = {
   aberta: { color: "text-blue-400", bg: "bg-blue-400/10" },
   parcial: { color: "text-amber-400", bg: "bg-amber-400/10" },
   paga: { color: "text-emerald-500", bg: "bg-emerald-500/10" },
   atrasada: { color: "text-red-400", bg: "bg-red-400/10" },
-}
-
-const getCategoryName = (id?: string | null) => {
-  if (!id) return "—"
-  return mockCategories.find((c) => c.id === id)?.name ?? "—"
 }
 
 interface BillsPageBaseProps {
@@ -51,13 +47,24 @@ export function BillsPageBase({
   buttonLabel,
 }: BillsPageBaseProps) {
   const [bills, setBills] = useState<Bill[]>([])
+  const [editingBill, setEditingBill] = useState<Bill | null>(null)
+  const [categories, setCategories] = useState<Category[]>([])
   const { formatCurrency } = useFormat()
 
+  const reloadBills = async () => {
+    const all = await billsService.findAll()
+    setBills(all.filter((b) => b.type === type))
+  }
+
   useEffect(() => {
-    billsService.findAll().then((all) => {
-      setBills(all.filter((b) => b.type === type))
-    })
+    reloadBills()
+    categoriesService.findAll().then(setCategories)
   }, [type])
+
+  const getCategoryName = (id?: string | null) => {
+    if (!id) return "—"
+    return categories.find((c) => c.id === id)?.name ?? "—"
+  }
 
   const totalPending = bills.filter((b) => b.status !== "paga").reduce((s, b) => s + b.amount, 0)
 
@@ -69,7 +76,7 @@ export function BillsPageBase({
     }, {} as Record<string, number>)
 
     return Object.entries(grouped).map(([name, value]) => ({ name, value }))
-  }, [bills])
+  }, [bills, categories])
 
   const columns = useMemo<ColumnDef<Bill, unknown>[]>(() => [
     {
@@ -111,14 +118,31 @@ export function BillsPageBase({
       header: "Recorrência",
       cell: ({ row }) => <span className="text-muted-foreground">{BILL_RECURRENCES[row.original.recurrence]}</span>,
     },
-  ], [formatCurrency])
+    {
+      id: "actions",
+      header: "",
+      cell: ({ row }) => {
+        const b = row.original
+        return (
+          <RowActions
+            deleteConfirmMessage={`Tem certeza que deseja excluir "${b.description || "esta conta"}"?`}
+            onEdit={() => setEditingBill(b)}
+            onDelete={async () => {
+              await billsService.remove(b.id)
+              reloadBills()
+            }}
+          />
+        )
+      },
+    },
+  ], [formatCurrency, type, categories])
 
   return (
     <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-8">
       <PageHeader
         title={title}
         description={description}
-        actions={<BillFormSheet type={type} buttonLabel={buttonLabel} />}
+        actions={<BillFormSheet type={type} buttonLabel={buttonLabel} onBillSaved={reloadBills} />}
       />
 
       {/* Resumo */}
@@ -145,6 +169,14 @@ export function BillsPageBase({
         emptyMessage="Nenhum registro encontrado"
         searchKey="description"
         searchPlaceholder="Buscar por descrição..."
+      />
+
+      <BillFormSheet
+        type={type}
+        initialData={editingBill}
+        open={!!editingBill}
+        onOpenChange={(open) => !open && setEditingBill(null)}
+        onBillSaved={reloadBills}
       />
     </div>
   )

@@ -1,48 +1,40 @@
 import type { Debt, SimulationResult } from '@/types/entities'
 import type { CreateDebtDto, SimulateDebtDto } from '@/types/dto'
-import { mockDebts, mockSimulationPrice, mockSimulationSAC } from '@/mocks/debts'
-
-let debts = [...mockDebts]
+import { api } from '@/lib/api'
 
 export const debtsService = {
   findAll: async (): Promise<Debt[]> => {
-    return [...debts]
+    const resp = await api.get<Debt[]>('/debts')
+    return Array.isArray(resp.data) ? resp.data : []
   },
 
   findOne: async (id: string): Promise<Debt> => {
-    const debt = debts.find((d) => d.id === id)
-    if (!debt) throw new Error('Dívida não encontrada')
-    return { ...debt }
+    const resp = await api.get<Debt>(`/debts/${id}`)
+    return resp.data
   },
 
   create: async (dto: CreateDebtDto): Promise<Debt> => {
-    const newDebt: Debt = {
-      id: `debt-${Date.now()}`,
-      organizationId: 'org-001',
-      name: dto.name,
-      accountId: dto.accountId ?? null,
-      originalAmount: dto.originalAmount,
-      interestRateMonth: dto.interestRateMonth ?? null,
-      totalInstallments: dto.totalInstallments ?? null,
-      installmentAmount: dto.installmentAmount ?? null,
-      startDate: dto.startDate,
-      status: dto.status,
-      currentBalance: dto.originalAmount,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    }
-    debts.push(newDebt)
-    return newDebt
+    const resp = await api.post<Debt>('/debts', dto)
+    return resp.data
+  },
+
+  update: async (id: string, dto: Partial<CreateDebtDto>): Promise<Debt> => {
+    const resp = await api.patch<Debt>(`/debts/${id}`, dto)
+    return resp.data
+  },
+
+  remove: async (id: string): Promise<void> => {
+    await api.delete(`/debts/${id}`)
   },
 
   simulate: async (id: string, dto: SimulateDebtDto): Promise<SimulationResult> => {
-    const debt = debts.find((d) => d.id === id)
+    const debt = await debtsService.findOne(id)
     if (!debt) throw new Error('Dívida não encontrada')
 
-    const balance = debt.currentBalance
-    const rate = (debt.interestRateMonth || 1.5) / 100
+    const balance = Number(debt.currentBalance || debt.originalAmount)
+    const rate = (Number(debt.interestRateMonth) || 1.5) / 100
     // Estimate a base installment if none exists (36 months assumption)
-    const baseInstallment = debt.installmentAmount || (balance * (rate / (1 - Math.pow(1 + rate, -36))))
+    const baseInstallment = Number(debt.installmentAmount) || (balance * (rate / (1 - Math.pow(1 + rate, -36))))
     
     let extra = 0
     if (dto.simulationMode === 'extraPayment') {
@@ -104,8 +96,9 @@ export const debtsService = {
 
   /** Total devido de todas as dívidas ativas */
   getTotalDebt: async (): Promise<number> => {
-    return debts
+    const list = await debtsService.findAll()
+    return list
       .filter((d) => d.status === 'ativa')
-      .reduce((sum, d) => sum + d.currentBalance, 0)
+      .reduce((sum, d) => sum + Number(d.currentBalance || d.originalAmount), 0)
   },
 }

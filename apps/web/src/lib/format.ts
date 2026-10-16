@@ -2,11 +2,13 @@
  * Formata um número como moeda brasileira (BRL)
  */
 export function formatCurrency(value: number): string {
+  const safe = Number.isFinite(value) ? value : 0
   return new Intl.NumberFormat('pt-BR', {
     style: 'currency',
     currency: 'BRL',
-  }).format(value)
+  }).format(safe)
 }
+
 
 /**
  * Formata uma data ISO para formato brasileiro
