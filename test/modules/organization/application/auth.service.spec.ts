@@ -49,8 +49,9 @@ describe('AuthService', () => {
           name: 'João',
           email: 'j@j.com',
           password: 'password1',
+          document: '12345678900',
           organizationName: 'Familia',
-          organizationType: 'familia' as any
+          organizationType: 'pessoal' as any
         })
       ).rejects.toThrow(BadRequestException);
     });
@@ -66,8 +67,9 @@ describe('AuthService', () => {
         name: 'João',
         email: 'j@j.com',
         password: 'password1',
+        document: '12345678900',
         organizationName: 'Familia',
-        organizationType: 'familia' as any
+        organizationType: 'pessoal' as any
       });
 
       expect(res.access_token).toBe('token-123');

@@ -136,9 +136,11 @@ model Organization {
   transactions Transaction[]
   debts        Debt[]
   auditLogs    AuditLog[]
+  pluggyItems  PluggyItem[]
 
   @@map("organizations")
 }
+
 
 model UserOrganizationRole {
   userId         String   @map("user_id") @db.Uuid
@@ -159,9 +161,12 @@ model Account {
   type                AccountType
   initialBalance      Decimal     @default(0) @map("initial_balance") @db.Decimal(18, 2)
   initialBalanceDate  DateTime    @default(now()) @map("initial_balance_date") @db.Date
+  pluggyAccountId     String?     @unique @map("pluggy_account_id")
+  pluggyItemId        String?     @map("pluggy_item_id")
   createdAt           DateTime    @default(now()) @map("created_at") @db.Timestamptz
 
   organization Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  pluggyItem   PluggyItem?   @relation(fields: [pluggyItemId], references: [pluggyItemId], onDelete: SetNull)
   bills        Bill[]
   transactions Transaction[] @relation("AccountSource")
   destTransac  Transaction[] @relation("AccountDest")
@@ -169,6 +174,7 @@ model Account {
 
   @@map("accounts")
   @@index([organizationId])
+  @@index([pluggyItemId])
 }
 
 model Category {
@@ -236,9 +242,10 @@ model Transaction {
   accountIdDest   String?           @map("account_id_dest") @db.Uuid
   categoryId      String?           @map("category_id") @db.Uuid
   costCenterId    String?           @map("cost_center_id") @db.Uuid
-  billId          String?           @map("bill_id") @db.Uuid
-  debtId          String?           @map("debt_id") @db.Uuid
-  amount          Decimal           @db.Decimal(18, 2)
+  billId              String?           @map("bill_id") @db.Uuid
+  debtId              String?           @map("debt_id") @db.Uuid
+  pluggyTransactionId String?           @unique @map("pluggy_transaction_id")
+  amount              Decimal           @db.Decimal(18, 2)
   date            DateTime          @db.Date
   description     String?
   origin          TransactionOrigin @default(manual)
@@ -298,3 +305,21 @@ model AuditLog {
   @@index([organizationId, createdAt])
   @@index([tableName, createdAt])
 }
+
+model PluggyItem {
+  id             String   @id @default(uuid()) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  pluggyItemId   String   @unique @map("pluggy_item_id")
+  connectorId    Int      @map("connector_id")
+  connectorName  String   @map("connector_name")
+  status         String   @default("UPDATED")
+  lastSyncedAt   DateTime @default(now()) @map("last_synced_at") @db.Timestamptz
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  accounts     Account[]
+
+  @@map("pluggy_items")
+  @@index([organizationId])
+}
+

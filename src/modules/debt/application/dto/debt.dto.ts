@@ -36,6 +36,40 @@ export class CreateDebtDto {
   status: DebtStatusDto;
 }
 
+export class UpdateDebtDto {
+  @IsOptional()
+  name?: string;
+
+  @IsOptional()
+  @IsUUID()
+  accountId?: string;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0.01)
+  originalAmount?: number;
+
+  @IsOptional()
+  @IsNumber()
+  interestRateMonth?: number;
+
+  @IsOptional()
+  @IsNumber()
+  totalInstallments?: number;
+
+  @IsOptional()
+  @IsNumber()
+  installmentAmount?: number;
+
+  @IsOptional()
+  @IsDateString()
+  startDate?: string;
+
+  @IsOptional()
+  @IsEnum(DebtStatusDto)
+  status?: DebtStatusDto;
+}
+
 export class SimulateDebtDto {
   @IsEnum(['extraPayment', 'targetMonths'])
   simulationType: 'extraPayment' | 'targetMonths';
@@ -50,3 +84,4 @@ export class SimulateDebtDto {
   @Min(1)
   targetMonths?: number;
 }
+

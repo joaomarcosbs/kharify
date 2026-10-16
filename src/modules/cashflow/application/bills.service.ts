@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../../common/prisma/prisma.service';
 import { CreateBillDto, UpdateBillDto } from './dto/bill.dto';
 
@@ -6,7 +6,9 @@ import { CreateBillDto, UpdateBillDto } from './dto/bill.dto';
 export class BillsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(dto: CreateBillDto) {
+  async create(organizationId: string, dto: CreateBillDto) {
+    await this.validateRelations(organizationId, dto);
+
     return this.prisma.rls.bill.create({
       data: {
         type: dto.type,
@@ -18,12 +20,14 @@ export class BillsService {
         status: dto.status || 'aberta',
         recurrence: dto.recurrence || 'nenhuma',
         description: dto.description,
+        organizationId,
       },
     });
   }
 
-  async findAll() {
+  async findAll(organizationId: string) {
     return this.prisma.rls.bill.findMany({
+      where: { organizationId },
       orderBy: { dueDate: 'asc' },
       include: {
         account: true,
@@ -33,9 +37,9 @@ export class BillsService {
     });
   }
 
-  async findOne(id: string) {
-    const bill = await this.prisma.rls.bill.findUnique({
-      where: { id },
+  async findOne(organizationId: string, id: string) {
+    const bill = await this.prisma.rls.bill.findFirst({
+      where: { id, organizationId },
       include: {
         account: true,
         category: true,
@@ -48,8 +52,9 @@ export class BillsService {
     return bill;
   }
 
-  async update(id: string, dto: UpdateBillDto) {
-    await this.findOne(id);
+  async update(organizationId: string, id: string, dto: UpdateBillDto) {
+    await this.findOne(organizationId, id);
+    await this.validateRelations(organizationId, dto);
 
     return this.prisma.rls.bill.update({
       where: { id },
@@ -67,8 +72,31 @@ export class BillsService {
     });
   }
 
-  async remove(id: string) {
-    await this.findOne(id);
+  async remove(organizationId: string, id: string) {
+    await this.findOne(organizationId, id);
     await this.prisma.rls.bill.delete({ where: { id } });
+  }
+
+  private async validateRelations(organizationId: string, dto: Partial<CreateBillDto | UpdateBillDto>) {
+    if (dto.accountId) {
+      const acc = await this.prisma.rls.account.findFirst({
+        where: { id: dto.accountId, organizationId },
+      });
+      if (!acc) throw new BadRequestException('Account not found in this organization');
+    }
+
+    if (dto.categoryId) {
+      const cat = await this.prisma.rls.category.findFirst({
+        where: { id: dto.categoryId, organizationId },
+      });
+      if (!cat) throw new BadRequestException('Category not found in this organization');
+    }
+
+    if (dto.costCenterId) {
+      const cc = await this.prisma.rls.costCenter.findFirst({
+        where: { id: dto.costCenterId, organizationId },
+      });
+      if (!cc) throw new BadRequestException('Cost center not found in this organization');
+    }
   }
 }

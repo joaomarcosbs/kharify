@@ -15,7 +15,7 @@ O Kharify é um ecossistema SaaS desenhado para famílias detalhistas e MEIs. O 
 ## **3. Análise Funcional (Benchmark Finidesk)**
 Utilizamos o Finidesk como referência por sua robustez em centros de custo e categorias:
 * **Pontos Fortes Herdados**: Centros de custo (por pessoa/projeto), categorias personalizadas (essencial/necessário/supérfluo) e foco central em dívidas.
-* **Melhorias Kharify**: Automação via **Open Finance**, projeções com taxas oficiais do BCB e **IA** para categorização e insights, eliminando a dependência exclusiva da disciplina do usuário.
+* **Melhorias Kharify**: Automação via **Open Finance** (API Pluggy com suporte ao modelo "Meu Pluggy" e Pluggy Connect), projeções com taxas oficiais do BCB e **IA** para categorização e insights, eliminando a dependência exclusiva da disciplina do usuário.
 
 ## **4. Escopo Detalhado do MVP (Fase 1)**
 * **Core**: Autenticação, gestão de Organizações e convite de membros com papéis (Owner, Gestor, Membro).
@@ -23,20 +23,21 @@ Utilizamos o Finidesk como referência por sua robustez em centros de custo e ca
 * **Movimentações**: Transações manuais, transferências entre contas, contas a pagar/receber (Bills) e recorrências.
 * **Dívidas**: Cadastro detalhado e acompanhamento de saldo devedor.
 
-## **5. Funcionalidades Avançadas e IA**
+## **5. Funcionalidades Avançadas, Open Finance e IA**
+* **Open Finance (Pluggy)**: Integração via Pluggy Connect (widget frontend Next.js) e Pluggy REST API + Webhooks no backend NestJS. Utilização do modelo "Meu Pluggy" para ambiente de desenvolvimento/sandbox e consentimento de dados bancários (Itaú, Nubank, Bradesco, Inter, Santander, XP, etc.).
 * **Investimentos**: Cadastro de ativos indexados (Selic/CDI/IPCA) e integração com o Sistema de Gerenciamento de Séries Temporais (SGS) do BCB.
-* **IA Nível 1 & 2**: Categorização automática de transações, detecção de anomalias, assistente conversacional e o **Kharify Health Score** para medir a saúde financeira.
+* **IA Nível 1 & 2**: Categorização automática de transações vindas do Open Finance, detecção de anomalias, assistente conversacional e o **Kharify Health Score** para medir a saúde financeira.
 
 ## **6. Modelo de Negócio e Planos**
 * **Plano Free**: Controle manual de fluxo e dívidas básicas.
-* **Plano Plus**: Open Finance (leitura), categorização por IA e alertas inteligentes.
+* **Plano Plus**: Open Finance Pluggy (sincronização de contas e extratos), categorização por IA e alertas inteligentes.
 * **Plano Pro**: Módulo de investimentos completo, assistente conversacional e Webhooks para MEIs.
 
 ## **7. Arquitetura Técnica (Clean Arch & Antigravity)**
 Estruturado em **Clean Architecture** para garantir a portabilidade entre NestJS e Go:
 * **Domain**: Entidades e regras de juros puras (TypeScript/Go futuramente).
-* **Application**: Casos de uso como `CalculateDebtPayoff` ou `RegisterTransaction`.
-* **Infrastructure**: Adaptadores para NestJS, Prisma ORM e APIs externas.
+* **Application**: Casos de uso como `CalculateDebtPayoff`, `RegisterTransaction` ou `SyncPluggyAccount`.
+* **Infrastructure**: Adaptadores para NestJS, Prisma ORM, Pluggy API (Open Finance Integration) e APIs externas.
 * **Motor de Simulação**: Serviço de alta performance em Go para cálculos matemáticos complexos (Fases futuras).
 
 ## **8. Persistência, Segurança e Auditoria**
@@ -59,5 +60,5 @@ Estruturado em **Clean Architecture** para garantir a portabilidade entre NestJS
 7.  **Web**: Frontend Next.js.
 8.  **Mobile**: App React Native/Expo.
 9.  **QA**: Testes de integração e stress.
-10. **Escala**: Open Finance e IA.
+10. **Escala & Open Finance**: Integração com Pluggy API (modelo "Meu Pluggy" e Pluggy Connect), Webhooks de sincronização bancária em tempo real e enriquecimento de extratos via IA.
 11. **Pós-MVP**: Módulo de Investimentos e Webhooks MEI.

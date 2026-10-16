@@ -22,7 +22,7 @@ COPY . .
 RUN npm run build
 
 # Expor a porta
-EXPOSE 3000
+EXPOSE 3080
 
-# Comando para rodar a aplicação em produção
-CMD ["npm", "run", "start:prod"]
+# Comando para rodar migrações e iniciar a aplicação em produção
+CMD ["sh", "-c", "npx prisma migrate deploy && npm run start:prod"]

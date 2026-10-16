@@ -1,35 +1,39 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
 import { AccountsService } from '../../application/accounts.service';
 import { CreateAccountDto, UpdateAccountDto } from '../../application/dto/account.dto';
-import { JwtAuthGuard } from '../../../../modules/organization/infrastructure/auth/jwt-auth.guard';
+import { OrganizationId } from '../../../../common/decorators/organization.decorator';
+import { Roles } from '../../../../common/decorators/roles.decorator';
+import { UserRole } from '@prisma/client';
 
-@UseGuards(JwtAuthGuard)
 @Controller('accounts')
 export class AccountsController {
   constructor(private readonly accountsService: AccountsService) {}
 
+  @Roles(UserRole.owner, UserRole.gestor)
   @Post()
-  create(@Body() createAccountDto: CreateAccountDto) {
-    return this.accountsService.create(createAccountDto);
+  create(@OrganizationId() orgId: string, @Body() createAccountDto: CreateAccountDto) {
+    return this.accountsService.create(orgId, createAccountDto);
   }
 
   @Get()
-  findAll() {
-    return this.accountsService.findAll();
+  findAll(@OrganizationId() orgId: string) {
+    return this.accountsService.findAll(orgId);
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.accountsService.findOne(id);
+  findOne(@OrganizationId() orgId: string, @Param('id') id: string) {
+    return this.accountsService.findOne(orgId, id);
   }
 
+  @Roles(UserRole.owner, UserRole.gestor)
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateAccountDto: UpdateAccountDto) {
-    return this.accountsService.update(id, updateAccountDto);
+  update(@OrganizationId() orgId: string, @Param('id') id: string, @Body() updateAccountDto: UpdateAccountDto) {
+    return this.accountsService.update(orgId, id, updateAccountDto);
   }
 
+  @Roles(UserRole.owner, UserRole.gestor)
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.accountsService.remove(id);
+  remove(@OrganizationId() orgId: string, @Param('id') id: string) {
+    return this.accountsService.remove(orgId, id);
   }
 }

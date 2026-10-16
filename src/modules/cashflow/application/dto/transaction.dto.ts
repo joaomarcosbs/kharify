@@ -53,3 +53,49 @@ export class CreateTransactionDto {
   @IsEnum(TransactionOriginDto)
   origin?: TransactionOriginDto;
 }
+
+export class UpdateTransactionDto {
+  @IsOptional()
+  @IsEnum(TransactionTypeDto)
+  type?: TransactionTypeDto;
+
+  @IsOptional()
+  @IsUUID()
+  accountId?: string;
+
+  @IsOptional()
+  @IsUUID()
+  accountIdDest?: string;
+
+  @IsOptional()
+  @IsUUID()
+  categoryId?: string;
+
+  @IsOptional()
+  @IsUUID()
+  costCenterId?: string;
+
+  @IsOptional()
+  @IsUUID()
+  billId?: string;
+
+  @IsOptional()
+  @IsUUID()
+  debtId?: string;
+
+  @IsOptional()
+  @IsNumber()
+  @IsPositive()
+  amount?: number;
+
+  @IsOptional()
+  @IsDateString()
+  date?: string;
+
+  @IsOptional()
+  description?: string;
+
+  @IsOptional()
+  @IsEnum(TransactionOriginDto)
+  origin?: TransactionOriginDto;
+}

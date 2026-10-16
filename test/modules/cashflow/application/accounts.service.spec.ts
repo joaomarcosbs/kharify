@@ -17,6 +17,13 @@ describe('AccountsService', () => {
           useValue: {
             rls: {
               account: {
+                findFirst: jest.fn().mockResolvedValue({
+                  id: 'acc-1',
+                  name: 'Teste',
+                  type: 'conta',
+                  initialBalance: 1000,
+                  initialBalanceDate: new Date()
+                }),
                 findUnique: jest.fn().mockResolvedValue({
                   id: 'acc-1',
                   name: 'Teste',
@@ -46,7 +53,7 @@ describe('AccountsService', () => {
         .mockResolvedValueOnce({ _sum: { amount: 200 } })   // expenses
         .mockResolvedValueOnce({ _sum: { amount: 0 } });    // transfersIn
 
-      const account = await service.findOne('acc-1');
+      const account = await service.findOne('org-1', 'acc-1');
 
       // Calculation: initial(1000) + in(500) + transfers(0) - out(200) = 1300
       expect(account.runtimeBalance).toBe(1300);

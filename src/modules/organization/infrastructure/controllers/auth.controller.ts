@@ -2,7 +2,9 @@ import { Controller, Post, Body, HttpCode, HttpStatus } from '@nestjs/common';
 import { AuthService } from '../../application/auth.service';
 import { RegisterDto } from '../../application/dto/register.dto';
 import { LoginDto, SocialLoginDto } from '../../application/dto/login.dto';
+import { Public } from '../../../../common/decorators/public.decorator';
 
+@Public()
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
@@ -24,4 +26,5 @@ export class AuthController {
     return this.authService.socialLogin(dto);
   }
 }
+
 

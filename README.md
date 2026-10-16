@@ -29,7 +29,7 @@ A base de código deve respeitar a divisão estrita dos seguintes módulos desde
 *   `transactions` (Fluxo de caixa, categorias, centros de custo)
 *   `debts` (Gestão e acompanhamento de dívidas)
 *   `simulations` (Motor de cálculo para quitação e investimentos)
-*   `integrations` (Open Finance e APIs do BCB)
+*   `integrations` (Open Finance via Pluggy API e APIs do BCB)
 *   `notifications` (Webhooks e colaboração familiar ativa)
 
 ---
@@ -72,4 +72,5 @@ O banco de dados PostgreSQL foi modelado para suportar:
 2.  **Fase 2:** Endpoints CRUD (Accounts, Categories, Cost Centers).
 3.  **Fase 3 & 4:** Regras vitais de fluxo de caixa (cálculo dinâmico de saldo de contas) e Contas a Pagar/Receber (`bills`).
 4.  **Fase 5:** Módulo de dívidas e isolamento do motor do Simulador (Valor extra → Prazo / Data alvo → Parcela), evidenciando o "Lucro da Quitação" (juros economizados).
-5.  **Fase Futura:** Extração de simulações pesadas e pipelines de conciliação do Open Finance para microserviços em Go.
+5.  **Fase 10 (Open Finance & IA):** Integração com a API da Pluggy (modelo "Meu Pluggy" / Pluggy Connect), Webhooks de sincronização em tempo real e enriquecimento de transações via motor de IA.
+6.  **Fase Futura:** Extração de simulações pesadas e pipelines de conciliação para microserviços em Go.
