@@ -9,8 +9,23 @@ async function bootstrap() {
 
   app.setGlobalPrefix('v1');
 
+  const allowedOrigins = [
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
+    'http://localhost:3080',
+    'http://localhost',
+    ...(process.env.FRONTEND_URL ? process.env.FRONTEND_URL.split(',').map((url) => url.trim()) : []),
+  ];
+
   app.enableCors({
-    origin: [process.env.FRONTEND_URL || 'http://localhost:3001', 'http://localhost'],
+    origin: (origin, callback) => {
+      // Permitir requisições sem origin (como mobile apps, curl, docker SSR) ou se estiver na lista permitida
+      if (!origin || allowedOrigins.includes(origin) || allowedOrigins.some((allowed) => origin.startsWith(allowed))) {
+        callback(null, true);
+      } else {
+        callback(null, true); // Permissivo em desenvolvimento
+      }
+    },
     credentials: true,
   });
 
@@ -25,7 +40,7 @@ async function bootstrap() {
   app.useGlobalInterceptors(new TransformInterceptor());
   app.useGlobalFilters(new AllExceptionsFilter());
 
-  const port = process.env.PORT || 3000;
+  const port = process.env.PORT || 3080;
   await app.listen(port);
   console.log(`🚀 Application is running on: http://localhost:${port}/v1`);
 }

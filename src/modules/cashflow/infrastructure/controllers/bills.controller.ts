@@ -1,35 +1,39 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
 import { BillsService } from '../../application/bills.service';
 import { CreateBillDto, UpdateBillDto } from '../../application/dto/bill.dto';
-import { JwtAuthGuard } from '../../../../modules/organization/infrastructure/auth/jwt-auth.guard';
+import { OrganizationId } from '../../../../common/decorators/organization.decorator';
+import { Roles } from '../../../../common/decorators/roles.decorator';
+import { UserRole } from '@prisma/client';
 
-@UseGuards(JwtAuthGuard)
 @Controller('bills')
 export class BillsController {
   constructor(private readonly billsService: BillsService) {}
 
+  @Roles(UserRole.owner, UserRole.gestor, UserRole.membro)
   @Post()
-  create(@Body() dto: CreateBillDto) {
-    return this.billsService.create(dto);
+  create(@OrganizationId() orgId: string, @Body() dto: CreateBillDto) {
+    return this.billsService.create(orgId, dto);
   }
 
   @Get()
-  findAll() {
-    return this.billsService.findAll();
+  findAll(@OrganizationId() orgId: string) {
+    return this.billsService.findAll(orgId);
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.billsService.findOne(id);
+  findOne(@OrganizationId() orgId: string, @Param('id') id: string) {
+    return this.billsService.findOne(orgId, id);
   }
 
+  @Roles(UserRole.owner, UserRole.gestor)
   @Patch(':id')
-  update(@Param('id') id: string, @Body() dto: UpdateBillDto) {
-    return this.billsService.update(id, dto);
+  update(@OrganizationId() orgId: string, @Param('id') id: string, @Body() dto: UpdateBillDto) {
+    return this.billsService.update(orgId, id, dto);
   }
 
+  @Roles(UserRole.owner, UserRole.gestor)
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.billsService.remove(id);
+  remove(@OrganizationId() orgId: string, @Param('id') id: string) {
+    return this.billsService.remove(orgId, id);
   }
 }

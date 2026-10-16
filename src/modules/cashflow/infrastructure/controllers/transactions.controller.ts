@@ -1,25 +1,38 @@
-import { Controller, Get, Post, Body, Param, Delete, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Body, Param, Delete } from '@nestjs/common';
 import { TransactionsService } from '../../application/transactions.service';
-import { CreateTransactionDto } from '../../application/dto/transaction.dto';
-import { JwtAuthGuard } from '../../../../modules/organization/infrastructure/auth/jwt-auth.guard';
+import { CreateTransactionDto, UpdateTransactionDto } from '../../application/dto/transaction.dto';
+import { OrganizationId } from '../../../../common/decorators/organization.decorator';
+import { Roles } from '../../../../common/decorators/roles.decorator';
+import { UserRole } from '@prisma/client';
 
-@UseGuards(JwtAuthGuard)
 @Controller('transactions')
 export class TransactionsController {
   constructor(private readonly transactionsService: TransactionsService) {}
 
+  @Roles(UserRole.owner, UserRole.gestor, UserRole.membro)
   @Post()
-  create(@Body() dto: CreateTransactionDto) {
-    return this.transactionsService.create(dto);
+  create(@OrganizationId() orgId: string, @Body() dto: CreateTransactionDto) {
+    return this.transactionsService.create(orgId, dto);
   }
 
   @Get()
-  findAll() {
-    return this.transactionsService.findAll();
+  findAll(@OrganizationId() orgId: string) {
+    return this.transactionsService.findAll(orgId);
   }
 
+  @Roles(UserRole.owner, UserRole.gestor, UserRole.membro)
+  @Patch(':id')
+  update(
+    @OrganizationId() orgId: string,
+    @Param('id') id: string,
+    @Body() dto: UpdateTransactionDto
+  ) {
+    return this.transactionsService.update(orgId, id, dto);
+  }
+
+  @Roles(UserRole.owner, UserRole.gestor)
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.transactionsService.remove(id);
+  remove(@OrganizationId() orgId: string, @Param('id') id: string) {
+    return this.transactionsService.remove(orgId, id);
   }
 }

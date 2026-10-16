@@ -1,35 +1,39 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
 import { CategoriesService } from '../../application/categories.service';
 import { CreateCategoryDto, UpdateCategoryDto } from '../../application/dto/category.dto';
-import { JwtAuthGuard } from '../../../../modules/organization/infrastructure/auth/jwt-auth.guard';
+import { OrganizationId } from '../../../../common/decorators/organization.decorator';
+import { Roles } from '../../../../common/decorators/roles.decorator';
+import { UserRole } from '@prisma/client';
 
-@UseGuards(JwtAuthGuard)
 @Controller('categories')
 export class CategoriesController {
   constructor(private readonly categoriesService: CategoriesService) {}
 
+  @Roles(UserRole.owner, UserRole.gestor)
   @Post()
-  create(@Body() createCategoryDto: CreateCategoryDto) {
-    return this.categoriesService.create(createCategoryDto);
+  create(@OrganizationId() orgId: string, @Body() createCategoryDto: CreateCategoryDto) {
+    return this.categoriesService.create(orgId, createCategoryDto);
   }
 
   @Get()
-  findAll() {
-    return this.categoriesService.findAll();
+  findAll(@OrganizationId() orgId: string) {
+    return this.categoriesService.findAll(orgId);
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.categoriesService.findOne(id);
+  findOne(@OrganizationId() orgId: string, @Param('id') id: string) {
+    return this.categoriesService.findOne(orgId, id);
   }
 
+  @Roles(UserRole.owner, UserRole.gestor)
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateCategoryDto: UpdateCategoryDto) {
-    return this.categoriesService.update(id, updateCategoryDto);
+  update(@OrganizationId() orgId: string, @Param('id') id: string, @Body() updateCategoryDto: UpdateCategoryDto) {
+    return this.categoriesService.update(orgId, id, updateCategoryDto);
   }
 
+  @Roles(UserRole.owner, UserRole.gestor)
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.categoriesService.remove(id);
+  remove(@OrganizationId() orgId: string, @Param('id') id: string) {
+    return this.categoriesService.remove(orgId, id);
   }
 }
