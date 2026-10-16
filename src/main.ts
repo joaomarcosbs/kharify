@@ -22,8 +22,15 @@ async function bootstrap() {
       // Permitir requisições sem origin (como mobile apps, curl, docker SSR) ou se estiver na lista permitida
       if (!origin || allowedOrigins.includes(origin) || allowedOrigins.some((allowed) => origin.startsWith(allowed))) {
         callback(null, true);
+        return;
+      }
+
+      // In production we must deny unknown origins. In non-production allow but log a warning.
+      if (process.env.NODE_ENV === 'production') {
+        callback(new Error('Origin not allowed by CORS'), false);
       } else {
-        callback(null, true); // Permissivo em desenvolvimento
+        console.warn(`CORS: allowing origin ${origin} in non-production environment`);
+        callback(null, true);
       }
     },
     credentials: true,

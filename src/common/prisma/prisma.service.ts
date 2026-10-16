@@ -31,14 +31,22 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
             return this;
         }
 
+        // Strict validation: allow only UUID formatted organization IDs to avoid injection
+        const uuidRegex = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/;
+        if (!uuidRegex.test(organizationId)) {
+            // Fail closed: do not attempt to use an untrusted organizationId in raw SQL
+            throw new Error('Invalid organizationId format');
+        }
+
         const self = this;
 
         return this.$extends({
             query: {
                 $allModels: {
                     async $allOperations({ args, query }) {
+                        // Use parameterized/raw-tagged query to bind the organizationId safely
                         const [, result] = await self.$transaction([
-                            self.$executeRawUnsafe(`SELECT set_config('app.current_organization_id', '${organizationId}', TRUE)`),
+                            self.$executeRaw`SELECT set_config('app.current_organization_id', ${organizationId}, TRUE)`,
                             query(args),
                         ]);
                         return result;
@@ -48,4 +56,3 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
         }) as unknown as PrismaClient; // Cast block to keep compatible with regular types
     }
 }
-
