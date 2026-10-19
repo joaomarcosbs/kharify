@@ -1,111 +1,128 @@
-# Kharify — Web App
+# Kharify Web
 
 > *"Gerencie com graça o que foi graciosamente confiado a você."*
 
-Interface web do **Kharify**, uma plataforma SaaS de planejamento e gestão financeira voltada para famílias detalhistas e MEIs. Desenvolvida em Next.js com App Router, integra-se à `kharify-api` via Axios com autenticação JWT e isolamento por organização.
+Interface web do Kharify: uma aplicação de gestão financeira para famílias e pequenos negócios. O app se conecta à [Kharify API](../kharify-api) para autenticação, organizações, contas, transações, contas recorrentes, dívidas, dashboard e Open Finance.
 
----
+## Status atual
 
-## 🛠 Stack
+O núcleo de gestão financeira está conectado à API. Algumas áreas de configurações ainda são locais ou demonstrativas; elas estão discriminadas abaixo para não serem confundidas com funcionalidades já persistidas no backend.
+
+| Área | Status | Observações |
+| --- | --- | --- |
+| Login e cadastro | Conectado à API | O JWT é mantido em cookie HttpOnly; recuperação de senha ainda não existe. |
+| Organizações | Parcialmente conectado | A organização ativa é persistida no navegador e enviada no header `X-Organization-Id`. A API suporta membros; a tela de membros ainda exibe dados mockados. |
+| Dashboard | Conectado à API | KPIs, Health Score, fluxo mensal e despesas por grupo consultam os endpoints de dashboard. |
+| Contas | Conectado à API | CRUD, detalhe da conta e conexão/sincronização Pluggy. O gráfico histórico do detalhe usa dados de demonstração. |
+| Transações | Conectado à API | Criação, edição, exclusão, filtros e busca global. |
+| Entradas e saídas fixas | Conectado à API | São contas a receber/pagar (`bills`) filtradas por tipo, com CRUD e recorrência. |
+| Dívidas | Conectado à API | CRUD e simulação Price/SAC exibida no dashboard. |
+| Categorias | Conectado à API | CRUD disponível como suporte aos formulários e lançamentos. |
+| Open Finance | Conectado à API | Pluggy Connect, cadastro manual de item, sincronização e desconexão. Sem credenciais Pluggy, a API disponibiliza sandbox. |
+| Preferências e aparência | Local | Salvas em `localStorage` sob `kharify_settings`. |
+| Perfil e cobrança | Demonstrativo | Perfil não tem persistência; assinatura, faturas, upgrade e cancelamento usam dados/ações mockadas. |
+
+## Stack
 
 | Camada | Tecnologia |
-|--------|-----------|
-| Framework | Next.js 15 (App Router) |
-| Linguagem | TypeScript |
-| Estilização | Tailwind CSS + shadcn/ui |
-| Formulários | React Hook Form + Zod |
-| Estado global | Zustand |
-| HTTP | Axios (`src/lib/api.ts`) com interceptors JWT |
-| Gráficos | Recharts (via shadcn chart) |
+| --- | --- |
+| Framework | Next.js 16 (App Router) |
+| Linguagem | TypeScript e React 19 |
+| Estilos | Tailwind CSS 4 e shadcn/ui |
+| Formulários | React Hook Form e Zod |
+| Estado | Zustand |
+| HTTP | Axios |
+| Gráficos | Recharts |
 | Notificações | Sonner |
 | Open Finance | Pluggy Connect |
 
----
+## Rotas principais
 
-## 🗂 Estrutura Principal
+| Rota | Finalidade |
+| --- | --- |
+| `/login`, `/register` | Autenticação |
+| `/home` | Visão geral financeira |
+| `/accounts`, `/accounts/[id]` | Contas e detalhe |
+| `/transactions` | Lançamentos financeiros |
+| `/fixed-income`, `/fixed-expenses` | Contas a receber e a pagar |
+| `/debts` | Dívidas e simulador |
+| `/settings/*` | Perfil, organização, membros, preferências, aparência e cobrança |
 
-```
-src/
-├── app/
-│   ├── (auth)/              # login, register
-│   ├── (dashboard)/         # rotas autenticadas
-│   │   ├── home/            # dashboard principal
-│   │   ├── accounts/        # contas bancárias + detalhe [id]
-│   │   ├── transactions/    # lançamentos
-│   │   ├── fixed-income/    # entradas fixas
-│   │   ├── fixed-expenses/  # saídas fixas
-│   │   ├── debts/           # dívidas + simulador Price/SAC
-│   │   └── settings/        # perfil, preferências, billing
-│   └── actions/             # server actions (auth)
-├── components/
-│   ├── dashboard/           # tabelas, gráficos, cards
-│   ├── forms/               # sheets de criação/edição
-│   └── ui/                  # componentes base (shadcn)
-├── services/                # camada de acesso à API
-├── stores/                  # Zustand (loading, organization)
-├── types/                   # entities, DTOs, enums
-└── lib/                     # api.ts, format, validators
-```
+## Integração com a API
 
----
+`src/lib/api.ts` configura o Axios para:
 
-## ⚙️ Configuração
+- enviar o cookie de sessão HttpOnly nas requisições (`withCredentials: true`);
+- adicionar a organização ativa como `X-Organization-Id`;
+- desfazer o envelope `{ data: ... }` das respostas NestJS;
+- exibir o overlay global de carregamento durante as requisições;
+- redirecionar ao login após uma resposta `401`.
+
+Os serviços que chamam a API ficam em `src/services/`. Arquivos em `src/mocks/` são referências/dados de demonstração e não são a fonte dos fluxos financeiros conectados.
+
+## Como executar localmente
 
 ### Pré-requisitos
 
-- Node.js ≥ 20
-- `kharify-api` rodando localmente (padrão: `http://localhost:3080`)
+- Node.js 20+
+- A API em execução — por padrão, `http://localhost:3080/v1`
 
 ### Instalação
 
 ```bash
+cd kharify-web
 npm install
 ```
 
-### Variáveis de ambiente
+Crie o arquivo local a partir do template:
 
-Crie um arquivo `.env.local` na raiz do projeto:
+```bash
+cp .env.example .env.local
+```
+
+Depois, ajuste os valores de `.env.local` para seu ambiente:
 
 ```env
 NEXT_PUBLIC_API_URL=http://localhost:3080/v1
-NEXT_PUBLIC_PLUGGY_CONNECT_TOKEN=seu_token_aqui   # opcional — Open Finance
+
+# Usada pelas server actions de autenticação; no Docker aponta para o serviço api.
+INTERNAL_API_URL=http://localhost:3080/v1
 ```
 
-### Rodando localmente
+Inicie o servidor de desenvolvimento:
 
 ```bash
 npm run dev
 ```
 
-Acesse [http://localhost:3000](http://localhost:3000).
+Acesse `http://localhost:3000`.
 
----
+## Comandos
 
-## 🔐 Autenticação
+```bash
+npm run dev    # desenvolvimento
+npm run build  # build de produção
+npm run start  # serve o build de produção
+npm run lint   # lint
+```
 
-O fluxo de autenticação usa **JWT Bearer Token** armazenado no `localStorage` (`kharify_token`). O interceptor de request em [`src/lib/api.ts`](src/lib/api.ts) injeta automaticamente o token e o `X-Organization-Id` em todas as requisições. Em caso de 401, o usuário é redirecionado para `/login`.
+## Docker
 
-O interceptor de response faz o **unwrap automático** do envelope `{ data: payload }` retornado pelo NestJS `TransformInterceptor`, então os serviços recebem o payload direto.
+O Dockerfile gera um build standalone do Next.js. Para iniciar toda a aplicação — incluindo API, PostgreSQL, Mailpit e Nginx — execute a partir da raiz do repositório:
 
----
+```bash
+docker compose up --build
+```
 
-## 🧩 Módulos Implementados
+Veja também [o README da API](../kharify-api/README.md) para a configuração de banco, JWT, migrações e Pluggy.
 
-| Módulo | Funcionalidades |
-|--------|----------------|
-| **Contas** | CRUD, saldo dinâmico, visualização em cards/tabela, Open Finance via Pluggy |
-| **Transações** | CRUD completo com edição, filtros por tipo, gráfico de top categorias |
-| **Entradas/Saídas Fixas** | CRUD com recorrência, status automático (aberta/parcial/paga/atrasada), gráfico de composição |
-| **Dívidas** | CRUD, simulador Price vs SAC em tempo real com tabela de amortização e gráfico comparativo |
-| **Categorias** | CRUD, filtrado por tipo (receita/despesa) e grupo (essencial/necessário/supérfluo) |
-| **Dashboard** | KPIs (saldo total, entradas/saídas mensais, próximos vencimentos), gráfico de despesas por grupo, top 5 categorias |
-| **Configurações** | Preferências salvas em `localStorage`, página de billing com plano e faturas |
-| **Busca global** | Busca em tempo real entre contas, transações, bills e dívidas |
+## Próximos incrementos
 
----
+- Persistir perfil, preferências e membros nas telas que hoje usam dados locais ou mockados.
+- Implementar recuperação de senha e cobrança real.
+- Conectar o histórico de saldo por conta a dados reais.
+- Ampliar as ações contextuais e a categorização inteligente de lançamentos.
 
-## 📝 Notas de Desenvolvimento
+## Fonte local
 
-- **Sem dados mock em produção:** todos os serviços em `src/services/` chamam a API real. Os arquivos em `src/mocks/` existem apenas como referência de tipos e podem ser removidos futuramente.
-- **Edição inline:** todas as entidades (contas, transações, bills, dívidas) suportam edição via sheet com pré-preenchimento de dados.
-- **Configurações:** armazenadas em `localStorage` com chave `kharify_settings` — sem endpoint de API necessário no momento.
+A Lora é distribuída com o projeto em `src/app/fonts/` e carregada por `next/font/local`. Isso elimina a dependência de rede com o Google Fonts durante o build. Os pesos incluídos são 400, 500, 600 e 700; a licença da fonte está em `src/app/fonts/OFL.txt`.

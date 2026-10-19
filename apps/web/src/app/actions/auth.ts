@@ -35,7 +35,7 @@ export async function loginAction(data: any) {
       sameSite: "lax",
     });
 
-    return { success: true, user, token, organizationId };
+    return { success: true, user, organizationId };
   } catch (error) {
     console.error("Erro no server action login:", error);
     return { success: false, error: "Erro interno de comunicação com a API." };
@@ -73,7 +73,7 @@ export async function registerAction(data: any) {
       sameSite: "lax",
     });
 
-    return { success: true, user, token, organizationId };
+    return { success: true, user, organizationId };
   } catch (error) {
     console.error("Erro no server action register:", error);
     return { success: false, error: "Erro interno de comunicação com a API." };

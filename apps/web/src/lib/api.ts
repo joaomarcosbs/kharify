@@ -32,14 +32,6 @@ api.interceptors.request.use(
       config.headers['X-Organization-Id'] = activeOrg.id;
     }
 
-    // Attach JWT Authorization Bearer token if stored locally
-    if (typeof window !== 'undefined') {
-      const token = localStorage.getItem('kharify_token');
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-      }
-    }
-
     return config;
   },
   (error) => {
@@ -66,7 +58,6 @@ api.interceptors.response.use(
     if (typeof window !== 'undefined' && error.response?.status === 401) {
       const currentPath = window.location.pathname;
       if (currentPath !== '/login' && currentPath !== '/register') {
-        localStorage.removeItem('kharify_token');
         window.location.href = '/login';
       }
     }

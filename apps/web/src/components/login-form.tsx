@@ -4,7 +4,6 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import { cn } from "@/lib/utils"
-import { api } from "@/lib/api"
 import { loginAction } from "@/app/actions/auth"
 import { useOrganizationStore } from "@/stores/organization-store"
 import { Button } from "@/components/ui/button"
@@ -49,9 +48,6 @@ export function LoginForm({
     try {
       const response = await loginAction(data)
       if (response.success) {
-        if (response.token) {
-          localStorage.setItem('kharify_token', response.token)
-        }
         if (response.organizationId) {
           useOrganizationStore.getState().setActiveOrganization({
             id: response.organizationId,
