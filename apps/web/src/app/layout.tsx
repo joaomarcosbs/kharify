@@ -3,6 +3,7 @@ import localFont from "next/font/local";
 import { ThemeProvider } from "@/components/theme-provider";
 import { GlobalLoadingOverlay } from "@/components/global-loading-overlay";
 import { AuthTokenMigration } from "@/components/auth-token-migration";
+import { GoogleProvider } from "@/components/google-provider";
 import { Toaster } from "sonner";
 import "./globals.css";
 
@@ -35,10 +36,12 @@ export default function RootLayout({
           defaultTheme="system"
           enableSystem
         >
-          <AuthTokenMigration />
-          <GlobalLoadingOverlay />
-          <Toaster richColors position="top-right" />
-          {children}
+          <GoogleProvider>
+            <AuthTokenMigration />
+            <GlobalLoadingOverlay />
+            <Toaster richColors position="top-right" />
+            {children}
+          </GoogleProvider>
         </ThemeProvider>
       </body>
     </html>
