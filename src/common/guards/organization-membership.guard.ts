@@ -31,7 +31,16 @@ export class OrganizationMembershipGuard implements CanActivate {
 
     // Header override takes precedence over token's default organization
     const headerOrgId = request.headers['x-organization-id'] || request.headers['X-Organization-Id'];
-    const targetOrgId = (Array.isArray(headerOrgId) ? headerOrgId[0] : headerOrgId) || user.organizationId;
+
+    // Se a rota for diretamente sobre uma organização com param ':id' (/organizations/:id),
+    // o targetOrgId OBRIGATORIAMENTE deve ser o id da URL, impedindo bypass IDOR/BOLA via cabeçalho.
+    const isDirectOrgRoute =
+      request.params?.id &&
+      (request.route?.path?.includes('organizations/:id') || request.url?.includes('/organizations/'));
+
+    const targetOrgId = isDirectOrgRoute
+      ? request.params.id
+      : (Array.isArray(headerOrgId) ? headerOrgId[0] : headerOrgId) || user.organizationId;
 
     if (!targetOrgId) {
       throw new ForbiddenException('No active organization specified or found');

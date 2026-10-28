@@ -77,49 +77,13 @@ describe('AuthService', () => {
     });
   });
 
-  describe('socialLogin', () => {
-    it('deve realizar auto-cadastro quando usuário do Provider não for encontrado na base', async () => {
-      mockPrisma.user.findUnique.mockResolvedValue(null);
-      mockPrisma.$transaction.mockResolvedValue({ 
-          newUser: { id: 'social1', email: 'google@g.com' }, 
-          org: { id: 'org-google' } 
-      });
-
-      const res = await service.socialLogin({
-        provider: 'google' as any,
-        providerId: 'google-id-123',
-        email: 'google@g.com',
-        name: 'Google User',
-      });
-
-      expect(res.access_token).toBe('token-123');
-      expect(mockPrisma.$transaction).toHaveBeenCalled();
-    });
-
-    it('deve vincular conta se usuário já existe mas ainda não tinha o ID do provedor', async () => {
-      const existingUser = {
-          id: 'u-exists', 
-          email: 'j@apple.com', 
-          googleId: null, 
-          roles: [{ organizationId: 'o1' }] 
-      };
-      // user.update is not mocked yet, mock it inline 
-      mockPrisma.user['update'] = jest.fn().mockResolvedValue({});
-      mockPrisma.user.findUnique.mockResolvedValue(existingUser);
-
-      const res = await service.socialLogin({
-        provider: 'google' as any,
-        providerId: 'g_456',
-        email: 'j@apple.com',
-        name: 'Apple/Google Merge',
-      });
-
-      expect(res.access_token).toBeDefined();
-      expect(mockPrisma.user['update']).toHaveBeenCalledWith({
-        where: { id: 'u-exists' },
-        data: { googleId: 'g_456' }
-      });
+  // socialLogin foi removido — a autenticação social agora usa loginWithGoogle
+  // que verifica tokens diretamente com o google-auth-library.
+  // Testes de integração para loginWithGoogle devem ser feitos com mocks do OAuth2Client.
+  describe.skip('socialLogin (deprecated)', () => {
+    it('foi substituído por loginWithGoogle', () => {
+      // Endpoint /auth/social-login removido por questões de segurança.
+      // Usar POST /auth/google com idToken verificado via google-auth-library.
     });
   });
 });
-

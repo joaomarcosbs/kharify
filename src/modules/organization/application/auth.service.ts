@@ -1,17 +1,26 @@
-import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, BadRequestException, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../../common/prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import { OrganizationType } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
+import { OAuth2Client } from 'google-auth-library';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+  private googleClient: OAuth2Client;
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
-  ) {}
+    private readonly configService: ConfigService,
+  ) {
+    const googleClientId = this.configService.get<string>('GOOGLE_CLIENT_ID');
+    this.googleClient = new OAuth2Client(googleClientId);
+  }
 
   async register(dto: RegisterDto) {
     const userExists = await this.prisma.user.findUnique({
@@ -85,61 +94,98 @@ export class AuthService {
     return this.generateToken(user.id, user.email, orgRole.organizationId);
   }
 
-  async socialLogin(dto: import('./dto/login.dto').SocialLoginDto) {
-    let user = await this.prisma.user.findUnique({
-      where: { email: dto.email },
-      include: { roles: true }
-    });
-
-    // 1. User doesn't exist, register dynamically!
-    if (!user) {
-       const result = await this.prisma.$transaction(async (tx) => {
-         const org = await tx.organization.create({
-           data: {
-             name: 'Minha Organização',
-             type: OrganizationType.pessoal,
-           }
-         });
-         
-         const payload: any = {
-           name: dto.name,
-           email: dto.email,
-           provider: dto.provider,
-         };
-         
-         if (dto.provider === 'google') payload.googleId = dto.providerId;
-         if (dto.provider === 'facebook') payload.facebookId = dto.providerId;
-         if (dto.provider === 'apple') payload.appleId = dto.providerId;
-
-         const newUser = await tx.user.create({ data: payload });
-
-         await tx.userOrganizationRole.create({
-           data: {
-             userId: newUser.id,
-             organizationId: org.id,
-             role: 'owner'
-           }
-         });
-         return { newUser, org };
-       });
-
-       return this.generateToken(result.newUser.id, result.newUser.email, result.org.id);
+  async loginWithGoogle(idToken: string) {
+    const googleClientId = this.configService.get<string>('GOOGLE_CLIENT_ID');
+    if (!googleClientId) {
+      throw new BadRequestException(
+        'Login com Google não configurado nesta instância do Kharify (GOOGLE_CLIENT_ID ausente no .env).',
+      );
     }
 
-    // 2. User exists, let's link the provider ID if perfectly matched
-    const updatePayload: any = {};
-    if (dto.provider === 'google' && !user.googleId) updatePayload.googleId = dto.providerId;
-    if (dto.provider === 'facebook' && !user.facebookId) updatePayload.facebookId = dto.providerId;
-    if (dto.provider === 'apple' && !user.appleId) updatePayload.appleId = dto.providerId;
+    let payload;
+    try {
+      const ticket = await this.googleClient.verifyIdToken({
+        idToken,
+        audience: googleClientId,
+      });
+      payload = ticket.getPayload();
+    } catch (err: any) {
+      this.logger.error(`Falha ao verificar idToken do Google: ${err.message}`);
+      throw new UnauthorizedException('Token de autenticação do Google inválido ou expirado.');
+    }
 
-    if (Object.keys(updatePayload).length > 0) {
-      await this.prisma.user.update({ where: { id: user.id }, data: updatePayload });
+    if (!payload || !payload.email || !payload.email_verified) {
+      throw new UnauthorizedException('Conta Google sem e-mail verificado.');
+    }
+
+    const email = payload.email.toLowerCase().trim();
+    const name = payload.name || payload.given_name || 'Usuário Google';
+    const googleId = payload.sub;
+
+    // 1. Busca usuário existente pelo Google ID ou e-mail
+    let user = await this.prisma.user.findFirst({
+      where: {
+        OR: [
+          { googleId },
+          { email },
+        ],
+      },
+      include: { roles: true },
+    });
+
+    // 2. Se for novo usuário, cria dinamicamente usuário + organização pessoal
+    if (!user) {
+      const result = await this.prisma.$transaction(async (tx) => {
+        const org = await tx.organization.create({
+          data: {
+            name: `${name.split(' ')[0]} Família`,
+            type: OrganizationType.pessoal,
+          },
+        });
+
+        const newUser = await tx.user.create({
+          data: {
+            name,
+            email,
+            provider: 'google',
+            googleId,
+          },
+        });
+
+        await tx.userOrganizationRole.create({
+          data: {
+            userId: newUser.id,
+            organizationId: org.id,
+            role: 'owner',
+          },
+        });
+
+        return { newUser, org };
+      });
+
+      return this.generateToken(result.newUser.id, result.newUser.email, result.org.id);
+    }
+
+    // 3. Usuário já existia: vincula googleId se ainda não estava vinculado
+    if (!user.googleId) {
+      await this.prisma.user.update({
+        where: { id: user.id },
+        data: { googleId },
+      });
     }
 
     const orgRole = user.roles[0];
-    if (!orgRole) throw new UnauthorizedException('User does not belong to any organization');
+    if (!orgRole) {
+      throw new UnauthorizedException('Usuário não pertence a nenhuma organização');
+    }
 
     return this.generateToken(user.id, user.email, orgRole.organizationId);
+  }
+
+  async socialLogin(_dto: any) {
+    throw new BadRequestException(
+      'Endpoint desativado por segurança. Utilize /v1/auth/google enviando um idToken válido emitido pelo Google.',
+    );
   }
 
   private generateToken(userId: string, email: string, organizationId: string) {
