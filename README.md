@@ -19,7 +19,7 @@ Os módulos abaixo estão implementados no backend:
 | Dashboard | Implementado | Resumo financeiro, Health Score, fluxo mensal e recortes por categoria/centro de custo. |
 | Open Finance | Implementado com modo sandbox | Pluggy Connect, itens, sincronização, webhook e desconexão; sem credenciais Pluggy, usa dados sandbox. |
 | Auditoria | Implementado | Registro de mutações e consulta de logs para owner/gestor. |
-| IA, notificações e pagamentos | Não implementado | Não há motor de categorização por IA, envio de notificações ou integração de cobrança nesta API. |
+| IA e notificações | Planejado / BYOK | Motor de categorização inteligente via IA e envio de alertas configuráveis. |
 
 ## Stack
 
