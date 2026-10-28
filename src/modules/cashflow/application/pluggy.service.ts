@@ -16,7 +16,10 @@ export class PluggyService {
     const clientSecret = process.env.PLUGGY_CLIENT_SECRET;
 
     if (!clientId || !clientSecret) {
-      // Sandbox fallback token for development if env variables are not provided
+      if (process.env.NODE_ENV === 'production') {
+        throw new Error('Pluggy credentials are not configured in production');
+      }
+      this.logger.warn('Using mock sandbox Pluggy API key because credentials are not set');
       return 'mock-sandbox-pluggy-key';
     }
 
@@ -28,6 +31,9 @@ export class PluggyService {
       return response.data.apiKey;
     } catch (err: any) {
       this.logger.error(`Failed to obtain Pluggy API Key: ${err.message}`);
+      if (process.env.NODE_ENV === 'production') {
+        throw new BadRequestException('Failed to obtain Pluggy API Key');
+      }
       return 'mock-sandbox-pluggy-key';
     }
   }
