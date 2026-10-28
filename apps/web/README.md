@@ -20,7 +20,7 @@ O núcleo de gestão financeira está conectado à API. Algumas áreas de config
 | Categorias | Conectado à API | CRUD disponível como suporte aos formulários e lançamentos. |
 | Open Finance | Conectado à API | Pluggy Connect, cadastro manual de item, sincronização e desconexão. Sem credenciais Pluggy, a API disponibiliza sandbox. |
 | Preferências e aparência | Local | Salvas em `localStorage` sob `kharify_settings`. |
-| Perfil e cobrança | Demonstrativo | Perfil não tem persistência; assinatura, faturas, upgrade e cancelamento usam dados/ações mockadas. |
+| Perfil e Organização | Parcial | Gerenciamento de perfil e dados da organização. |
 
 ## Stack
 
@@ -46,7 +46,7 @@ O núcleo de gestão financeira está conectado à API. Algumas áreas de config
 | `/transactions` | Lançamentos financeiros |
 | `/fixed-income`, `/fixed-expenses` | Contas a receber e a pagar |
 | `/debts` | Dívidas e simulador |
-| `/settings/*` | Perfil, organização, membros, preferências, aparência e cobrança |
+| `/settings/*` | Perfil, organização, membros, preferências e aparência |
 
 ## Integração com a API
 
@@ -119,9 +119,9 @@ Veja também [o README da API](../kharify-api/README.md) para a configuração d
 ## Próximos incrementos
 
 - Persistir perfil, preferências e membros nas telas que hoje usam dados locais ou mockados.
-- Implementar recuperação de senha e cobrança real.
+- Implementar fluxo de recuperação de senha.
 - Conectar o histórico de saldo por conta a dados reais.
-- Ampliar as ações contextuais e a categorização inteligente de lançamentos.
+- Ampliar as ações contextuais e a importação de extratos OFX/CSV.
 
 ## Fonte local
 

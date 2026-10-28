@@ -19,7 +19,7 @@ const lora = localFont({
 
 export const metadata: Metadata = {
   title: "Kharify",
-  description: "Plataforma SaaS Kharify",
+  description: "Plataforma open source de gestão financeira pessoal e familiar",
 };
 
 export default function RootLayout({

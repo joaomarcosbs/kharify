@@ -7,7 +7,6 @@ import {
   Users,
   Palette,
   Settings2,
-  CreditCard,
   ChevronRight
 } from "lucide-react"
 import Link from "next/link"
@@ -50,12 +49,6 @@ const settingsAreas = [
         description: "Moeda, mês contábil e notificações.",
         icon: Settings2,
         href: "/settings/preferences",
-      },
-      {
-        title: "Faturamento e Planos",
-        description: "Gerencie sua assinatura do Kharify.",
-        icon: CreditCard,
-        href: "/settings/billing",
       },
     ]
   }

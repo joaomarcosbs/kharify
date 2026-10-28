@@ -11,16 +11,6 @@ export interface UserSettings {
   accentColor: string
 }
 
-export interface UserSubscription {
-  id: string
-  planName: string
-  status: "active" | "past_due" | "canceled"
-  membersUsed: number
-  membersQuota: number
-  transactionsQuota?: number
-  nextBillingDate: string
-}
-
 const defaultSettings: UserSettings = {
   id: "stg-1",
   theme: "system",
@@ -32,15 +22,6 @@ const defaultSettings: UserSettings = {
   debtAlert: true,
   weeklyDigest: false,
   accentColor: "green",
-}
-
-const mockSubscription: UserSubscription = {
-  id: "sub-1",
-  planName: "Kharify Gestor",
-  status: "active",
-  membersUsed: 3,
-  membersQuota: 5,
-  nextBillingDate: "2026-05-15T00:00:00Z",
 }
 
 export const settingsService = {
@@ -61,10 +42,5 @@ export const settingsService = {
       localStorage.setItem('kharify_settings', JSON.stringify(next))
     }
     return next
-  },
-
-  getSubscription: async (): Promise<UserSubscription> => {
-    await new Promise((resolve) => setTimeout(resolve, 300))
-    return mockSubscription
   },
 }

@@ -13,7 +13,6 @@ import {
   User,
   UserPlus,
   Settings2,
-  CreditCard,
 } from "lucide-react"
 
 import {
@@ -173,10 +172,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 <DropdownMenuItem className="cursor-pointer gap-2" render={<a href="/settings/preferences" />}>
                   <Settings2 className="size-4" />
                   Preferências
-                </DropdownMenuItem>
-                <DropdownMenuItem className="cursor-pointer gap-2" render={<a href="/settings/billing" />}>
-                  <CreditCard className="size-4" />
-                  Faturamento
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem className="cursor-pointer gap-2 text-red-400 focus:text-red-400">
