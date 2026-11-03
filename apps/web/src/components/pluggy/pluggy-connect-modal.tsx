@@ -14,9 +14,30 @@ import { Button } from "@/components/ui/button"
 import { pluggyService } from "@/services/pluggy.service"
 import { Landmark, ShieldCheck, RefreshCw, Sparkles, CheckCircle2, KeyRound, ArrowRight } from "lucide-react"
 
+interface PluggyItem {
+  id?: string
+  connector?: { id?: number; name?: string }
+}
+
+interface PluggySuccessData {
+  item?: PluggyItem
+}
+
+interface PluggyConnectOptions {
+  connectToken: string
+  includeSandbox: boolean
+  onSuccess: (data: PluggySuccessData) => void
+  onError: (error: unknown) => void
+  onClose: () => void
+}
+
+interface PluggyConnectInstance {
+  init: () => void
+}
+
 declare global {
   interface Window {
-    PluggyConnect?: any
+    PluggyConnect?: new (options: PluggyConnectOptions) => PluggyConnectInstance
   }
 }
 
@@ -53,7 +74,7 @@ export function PluggyConnectModal({ onSuccess }: PluggyConnectModalProps) {
         const pluggyConnect = new window.PluggyConnect({
           connectToken: tokenData.accessToken,
           includeSandbox: true,
-          onSuccess: async (data: any) => {
+          onSuccess: async (data: PluggySuccessData) => {
             const itemId = data.item?.id || `item-${Date.now()}`
             const connectorId = data.item?.connector?.id
             const connectorName = data.item?.connector?.name
@@ -64,7 +85,7 @@ export function PluggyConnectModal({ onSuccess }: PluggyConnectModalProps) {
               onSuccess?.()
             }, 1200)
           },
-          onError: (error: any) => {
+          onError: (error: unknown) => {
             console.error("Pluggy Connect error:", error)
             setLoading(false)
           },
@@ -90,7 +111,7 @@ export function PluggyConnectModal({ onSuccess }: PluggyConnectModalProps) {
         setSuccessMessage(null)
         onSuccess?.()
       }, 1200)
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Failed to connect bank:", err)
     } finally {
       setLoading(false)
@@ -116,7 +137,7 @@ export function PluggyConnectModal({ onSuccess }: PluggyConnectModalProps) {
         setManualItemId("")
         onSuccess?.()
       }, 1200)
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Failed to link manual itemId:", err)
       alert("Não foi possível encontrar ou vincular este ID. Verifique se o Item ID é válido.")
     } finally {

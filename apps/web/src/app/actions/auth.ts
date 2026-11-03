@@ -4,7 +4,9 @@ import { cookies } from "next/headers";
 
 const API_URL = process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:3080/v1";
 
-export async function loginAction(data: any) {
+type AuthData = Record<string, unknown>;
+
+export async function loginAction(data: AuthData) {
   try {
     const response = await fetch(`${API_URL}/auth/login`, {
       method: "POST",
@@ -42,7 +44,7 @@ export async function loginAction(data: any) {
   }
 }
 
-export async function registerAction(data: any) {
+export async function registerAction(data: AuthData) {
   try {
     const response = await fetch(`${API_URL}/auth/register`, {
       method: "POST",

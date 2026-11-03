@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useForm, Controller } from "react-hook-form"
+import type { Resolver } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 
@@ -76,7 +77,7 @@ export function DebtFormSheet({
     reset,
     formState: { errors },
   } = useForm<FormValues>({
-    resolver: zodResolver(schema) as any,
+    resolver: zodResolver(schema) as Resolver<FormValues>,
     mode: "onBlur",
     defaultValues: {
       name: "",
