@@ -98,7 +98,7 @@ O projeto não coleta dados de pagamento e foi feito para ser instalado e operad
    cp .env.example .env
    ```
 
-3. Gere os segredos e defina pelo menos `POSTGRES_PASSWORD` e `JWT_SECRET` no `.env`:
+3. Gere os segredos e defina `POSTGRES_PASSWORD`, `POSTGRES_APP_PASSWORD` e `JWT_SECRET` no `.env`:
 
    ```bash
    openssl rand -hex 24  # senha do banco
@@ -193,7 +193,8 @@ Para preencher um banco de dados de desenvolvimento local com dados de exemplo, 
 
 | Variável | Componente | Obrigatória | Finalidade |
 | --- | --- | --- | --- |
-| `POSTGRES_PASSWORD` | Docker Compose | Docker | Senha do PostgreSQL usada pelo Compose |
+| `POSTGRES_PASSWORD` | Docker Compose | Docker | Senha administrativa do PostgreSQL usada nas migrações |
+| `POSTGRES_APP_PASSWORD` | Docker Compose | Docker | Senha do usuário não-superusuário usado pela API |
 | `DATABASE_URL` | API | Sim | String de conexão com o PostgreSQL |
 | `JWT_SECRET` | API | Sim | Segredo usado para assinar tokens de autenticação |
 | `JWT_EXPIRES_IN` | API | Não | Validade do token; padrão `7d` |

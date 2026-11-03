@@ -100,10 +100,11 @@ The project does not collect payment data and was made to be installed and opera
    cp .env.example .env
    ```
 
-3. Generate secrets and set at least `POSTGRES_PASSWORD` and `JWT_SECRET` in `.env`:
+3. Generate secrets and set `POSTGRES_PASSWORD`, `POSTGRES_APP_PASSWORD`, and `JWT_SECRET` in `.env`:
 
    ```bash
-   openssl rand -hex 24  # database password
+   openssl rand -hex 24  # database administrator password
+   openssl rand -hex 24  # API runtime role password
    openssl rand -hex 32  # JWT_SECRET
    ```
 
@@ -195,7 +196,8 @@ To populate a local development database with sample data, run `npm run prisma:s
 
 | Variable | Component | Required | Purpose |
 | --- | --- | --- | --- |
-| `POSTGRES_PASSWORD` | Docker Compose | Docker | PostgreSQL password used by the Compose stack |
+| `POSTGRES_PASSWORD` | Docker Compose | Docker | PostgreSQL administrator password used for migrations |
+| `POSTGRES_APP_PASSWORD` | Docker Compose | Docker | Password for the non-superuser API database role |
 | `DATABASE_URL` | API | Yes | PostgreSQL connection string |
 | `JWT_SECRET` | API | Yes | Secret used to sign authentication tokens |
 | `JWT_EXPIRES_IN` | API | No | Token lifetime; defaults to `7d` |

@@ -58,7 +58,15 @@ api.interceptors.response.use(
     if (typeof window !== 'undefined' && error.response?.status === 401) {
       const currentPath = window.location.pathname;
       if (currentPath !== '/login' && currentPath !== '/register') {
-        window.location.href = '/login';
+        // The auth cookie is HttpOnly, so clear it through the Next.js route
+        // before redirecting. Otherwise the proxy can send the stale token
+        // back to /home and create an authentication redirect loop.
+        void fetch('/api/auth/logout', {
+          method: 'POST',
+          credentials: 'same-origin',
+        }).finally(() => {
+          window.location.replace('/login');
+        });
       }
     }
 

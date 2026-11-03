@@ -25,4 +25,4 @@ RUN npm run build
 EXPOSE 3080
 
 # Comando para rodar migrações e iniciar a aplicação em produção
-CMD ["sh", "-c", "npx prisma migrate deploy && npm run start:prod"]
+CMD ["sh", "-c", "node scripts/ensure-app-role.js && DATABASE_URL=\"$DATABASE_ADMIN_URL\" npx prisma migrate deploy && npm run start:prod"]

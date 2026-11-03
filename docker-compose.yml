@@ -27,9 +27,13 @@ services:
       db:
         condition: service_healthy
     environment:
-      - DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD}@db:5432/kharify?schema=public
+      - DATABASE_URL=postgresql://kharify_app:${POSTGRES_APP_PASSWORD}@db:5432/kharify?schema=public
+      - DATABASE_ADMIN_URL=postgresql://postgres:${POSTGRES_PASSWORD}@db:5432/kharify?schema=public
+      - POSTGRES_APP_PASSWORD=${POSTGRES_APP_PASSWORD}
       - JWT_SECRET=${JWT_SECRET}
       - JWT_EXPIRES_IN=${JWT_EXPIRES_IN}
+      - PLUGGY_CLIENT_ID=${PLUGGY_CLIENT_ID}
+      - PLUGGY_CLIENT_SECRET=${PLUGGY_CLIENT_SECRET}
       - PORT=3080
       - FRONTEND_URL=http://localhost:3000
       # Opcional: remova o comentário e configure para habilitar login com Google
