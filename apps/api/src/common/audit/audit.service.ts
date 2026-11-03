@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { sanitizeAuditData } from './audit-data.sanitizer';
 import { AuditAction } from '@prisma/client';
 
 @Injectable()
@@ -21,8 +22,12 @@ export class AuditService {
           userId,
           tableName,
           action,
-          oldData: oldData ? JSON.parse(JSON.stringify(oldData)) : undefined,
-          newData: newData ? JSON.parse(JSON.stringify(newData)) : undefined,
+          oldData: oldData
+            ? JSON.parse(JSON.stringify(sanitizeAuditData(oldData)))
+            : undefined,
+          newData: newData
+            ? JSON.parse(JSON.stringify(sanitizeAuditData(newData)))
+            : undefined,
         },
       });
     } catch (err) {
