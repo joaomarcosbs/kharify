@@ -1,6 +1,9 @@
 # Kharify
 
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](LICENSE)
+[![API CI](https://github.com/joaomarcosbs/kharify/actions/workflows/api.yml/badge.svg)](https://github.com/joaomarcosbs/kharify/actions/workflows/api.yml)
+[![Web CI](https://github.com/joaomarcosbs/kharify/actions/workflows/web.yml/badge.svg)](https://github.com/joaomarcosbs/kharify/actions/workflows/web.yml)
+[![Gitleaks](https://github.com/joaomarcosbs/kharify/actions/workflows/gitleaks.yml/badge.svg)](https://github.com/joaomarcosbs/kharify/actions/workflows/gitleaks.yml)
 
 > Manage with grace what has been graciously entrusted to you.
 
@@ -11,6 +14,23 @@
 Kharify is an open-source, self-hosted financial management platform for individuals, families, and small businesses. It combines a web dashboard with a REST API for organizing accounts, transactions, recurring bills, debts, categories, cost centers, and financial indicators in one or more organizations.
 
 Because Kharify is self-hosted, each installation controls its own database and financial data. Google OAuth and Pluggy Open Finance are optional integrations; the core application can run without them.
+
+<p align="center">
+  <img src="docs/images/dashboard.png" alt="Kharify dashboard with monthly cash flow, balances and recent activity" width="900">
+</p>
+
+<table>
+  <tr>
+    <td><img src="docs/images/accounts.png" alt="Bank accounts and Open Finance connection through Pluggy"></td>
+    <td><img src="docs/images/transactions.png" alt="Transactions list with category breakdown"></td>
+  </tr>
+  <tr>
+    <td><img src="docs/images/debts.png" alt="Debt tracking with a Price versus SAC payoff simulator"></td>
+    <td><img src="docs/images/fixed-expenses.png" alt="Recurring bills with due dates and status"></td>
+  </tr>
+</table>
+
+The interface is currently in Brazilian Portuguese.
 
 ## What Kharify does
 
@@ -70,7 +90,7 @@ The project does not collect payment data and was made to be installed and opera
 1. Clone the repository and enter it.
 
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/joaomarcosbs/kharify.git
    cd kharify
    ```
 
@@ -167,14 +187,9 @@ npm run dev
 
 Open http://localhost:3000.
 
-To populate the local installation with data for screenshots and README illustrations, run the demo seed from the API directory after applying the migrations:
+### Demo data (development only)
 
-```bash
-cd apps/api
-npm run prisma:seed
-```
-
-It creates the `Oliveira & Família` demo organization with accounts, categories, transactions, bills, a debt, a sandbox Open Finance item, and audit records. Demo login: `demo@kharify.local` / `Kharify123!`. These credentials are for local development only.
+To populate a local development database with sample data, run `npm run prisma:seed` from `apps/api` after applying the migrations. It creates a demo organization and a demo user (`demo@kharify.local` / `Kharify123!`). **Never run the seed against a real installation**, because the demo user has a publicly known password.
 
 ## Configuration
 
@@ -197,8 +212,6 @@ Never commit `.env`, `.env.local`, database credentials, JWT secrets, OAuth secr
 
 See the [technical reference](docs/reference.md) for web routes, API endpoint groups, roles and permissions, and useful commands.
 
-<!-- Screenshots: add selected images under docs/images/ when ready, then document them here with accessible captions. Do not add placeholder images. -->
-
 ## Current limitations and roadmap
 
 The main limitations and planned areas are:
@@ -210,17 +223,11 @@ The main limitations and planned areas are:
 - Organization member registration does not send e-mail automatically: an administrator creates the member and shares the generated initial password manually. The member can change it later from the profile page.
 - Appearance and notification preferences are persisted locally in the browser.
 - More integration and end-to-end test coverage.
+- The default Docker Compose setup assumes access through `localhost`. Serving it from another host or domain currently requires editing the URLs in `docker-compose.yml` and rebuilding the web image.
 
 ## Contributing
 
-Contributions are welcome. Before opening a pull request:
-
-1. Keep changes scoped and explain the user-facing impact.
-2. Run the relevant API tests, web lint, and production builds.
-3. Do not include secrets, private financial data, generated credentials, or local environment files.
-4. Update this README or the application-specific README files when behavior or configuration changes.
-
-Before opening a pull request, read [CONTRIBUTING.md](CONTRIBUTING.md).
+Bug reports and suggestions are welcome through issues. Code contributions will be accepted once the contributor agreement is in place; see [CONTRIBUTING.md](CONTRIBUTING.md) for the current status and guidelines.
 
 ## Security
 

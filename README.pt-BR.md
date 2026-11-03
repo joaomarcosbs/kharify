@@ -1,6 +1,9 @@
 # Kharify
 
 [![Licença: AGPL v3](https://img.shields.io/badge/Licença-AGPL%20v3-blue.svg)](LICENSE)
+[![API CI](https://github.com/joaomarcosbs/kharify/actions/workflows/api.yml/badge.svg)](https://github.com/joaomarcosbs/kharify/actions/workflows/api.yml)
+[![Web CI](https://github.com/joaomarcosbs/kharify/actions/workflows/web.yml/badge.svg)](https://github.com/joaomarcosbs/kharify/actions/workflows/web.yml)
+[![Gitleaks](https://github.com/joaomarcosbs/kharify/actions/workflows/gitleaks.yml/badge.svg)](https://github.com/joaomarcosbs/kharify/actions/workflows/gitleaks.yml)
 
 > Gerencie com graça o que foi graciosamente confiado a você.
 
@@ -11,6 +14,21 @@
 Kharify é uma plataforma open source e self-hosted de gestão financeira para pessoas, famílias e pequenas empresas. Ela combina um painel web com uma API REST para organizar contas, lançamentos, contas recorrentes, dívidas, categorias, centros de custo e indicadores financeiros em uma ou mais organizações.
 
 Como o Kharify é self-hosted, cada instalação controla seu próprio banco de dados e seus dados financeiros. O login com Google e a integração Open Finance com Pluggy são opcionais; a aplicação principal funciona sem eles.
+
+<p align="center">
+  <img src="docs/images/dashboard.png" alt="Painel do Kharify com fluxo de caixa mensal, saldos e atividade recente" width="900">
+</p>
+
+<table>
+  <tr>
+    <td><img src="docs/images/accounts.png" alt="Contas bancárias e conexão Open Finance por meio do Pluggy"></td>
+    <td><img src="docs/images/transactions.png" alt="Lista de lançamentos com divisão por categoria"></td>
+  </tr>
+  <tr>
+    <td><img src="docs/images/debts.png" alt="Controle de dívidas com simulador de quitação Price e SAC"></td>
+    <td><img src="docs/images/fixed-expenses.png" alt="Contas recorrentes com datas de vencimento e status"></td>
+  </tr>
+</table>
 
 ## Funcionalidades
 
@@ -70,7 +88,7 @@ O projeto não coleta dados de pagamento e foi feito para ser instalado e operad
 1. Clone o repositório e entre na pasta:
 
    ```bash
-   git clone <url-do-repositorio>
+   git clone https://github.com/joaomarcosbs/kharify.git
    cd kharify
    ```
 
@@ -167,14 +185,9 @@ npm run dev
 
 Acesse http://localhost:3000.
 
-Para preencher a instalação local com dados para capturas de tela e ilustrações do README, execute o seed de demonstração na pasta da API depois de aplicar as migrações:
+### Dados de demonstração (apenas desenvolvimento)
 
-```bash
-cd apps/api
-npm run prisma:seed
-```
-
-Ele cria a organização de demonstração `Oliveira & Família` com contas, categorias, lançamentos, contas a pagar/receber, uma dívida, um item Open Finance sandbox e registros de auditoria. Login de demonstração: `demo@kharify.local` / `Kharify123!`. Essas credenciais são apenas para desenvolvimento local.
+Para preencher um banco de dados de desenvolvimento local com dados de exemplo, execute `npm run prisma:seed` a partir de `apps/api` depois de aplicar as migrações. Ele cria uma organização de demonstração e um usuário de demonstração (`demo@kharify.local` / `Kharify123!`). **Nunca execute o seed contra uma instalação real**, porque o usuário de demonstração tem uma senha publicamente conhecida.
 
 ## Configuração
 
@@ -197,8 +210,6 @@ Nunca versione `.env`, `.env.local`, credenciais de banco, segredos JWT, segredo
 
 Consulte a [referência técnica](docs/reference.md) para rotas web, grupos de endpoints da API, papéis e permissões e comandos úteis.
 
-<!-- Screenshots: adicione imagens selecionadas em docs/images/ quando estiverem prontas e documente-as aqui com legendas acessíveis. Não adicione imagens placeholder. -->
-
 ## Limitações atuais e roadmap
 
 As principais limitações e próximos incrementos são:
@@ -210,17 +221,11 @@ As principais limitações e próximos incrementos são:
 - O cadastro de membros da organização não envia e-mail automaticamente: um administrador cria o membro e compartilha manualmente a senha inicial gerada. O membro pode alterá-la depois na tela de perfil.
 - As preferências de aparência e notificações são armazenadas localmente no navegador.
 - Maior cobertura de testes de integração e end-to-end.
+- A configuração padrão do Docker Compose pressupõe acesso por `localhost`. Para servi-la a partir de outro host ou domínio, atualmente é necessário editar as URLs em `docker-compose.yml` e reconstruir a imagem web.
 
 ## Contribuição
 
-Contribuições são bem-vindas. Antes de abrir um pull request:
-
-1. Mantenha as alterações focadas e explique o impacto para o usuário.
-2. Execute os testes relevantes da API, o lint da aplicação web e os builds de produção.
-3. Não inclua segredos, dados financeiros privados, credenciais geradas ou arquivos de ambiente.
-4. Atualize este README ou os READMEs específicos das aplicações quando o comportamento ou a configuração mudar.
-
-Antes de abrir um pull request, leia o [CONTRIBUTING.md](CONTRIBUTING.md).
+Relatos de bugs e sugestões são bem-vindos por meio das issues. Contribuições de código serão aceitas quando o acordo de contribuição estiver estabelecido; consulte [CONTRIBUTING.md](CONTRIBUTING.md) para ver o status atual e as orientações.
 
 ## Segurança
 
