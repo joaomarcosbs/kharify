@@ -1,4 +1,8 @@
-import { Injectable, ExecutionContext, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  ExecutionContext,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { AuthGuard } from '@nestjs/passport';
 import { ClsService } from 'nestjs-cls';
@@ -27,16 +31,20 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
   }
 
   handleRequest(err: any, user: any, info: any, context: ExecutionContext) {
+    void info;
+    void context;
     if (err || !user) {
-      throw err || new UnauthorizedException('Authentication token is missing or invalid');
+      throw (
+        err ||
+        new UnauthorizedException('Authentication token is missing or invalid')
+      );
     }
-    
+
     // Inject into AsyncLocalStorage (ClsService) context
     if (user.organizationId) {
       this.cls.set('organizationId', user.organizationId);
     }
-    
+
     return user;
   }
 }
-

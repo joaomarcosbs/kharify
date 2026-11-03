@@ -7,6 +7,7 @@ import { OrganizationController } from './infrastructure/controllers/organizatio
 import { AuthService } from './application/auth.service';
 import { OrganizationService } from './application/organization.service';
 import { JwtStrategy } from './infrastructure/auth/jwt.strategy';
+import { ProfileController } from './infrastructure/controllers/profile.controller';
 
 @Module({
   imports: [
@@ -17,20 +18,22 @@ import { JwtStrategy } from './infrastructure/auth/jwt.strategy';
       useFactory: async (configService: ConfigService) => {
         const secret = configService.get<string>('JWT_SECRET');
         if (!secret) {
-          throw new Error('JWT_SECRET environment variable is required. Do not run with a default secret.');
+          throw new Error(
+            'JWT_SECRET environment variable is required. Do not run with a default secret.',
+          );
         }
         return {
           secret,
           signOptions: {
-            expiresIn: (configService.get<string>('JWT_EXPIRES_IN') || '1d') as any,
+            expiresIn: (configService.get<string>('JWT_EXPIRES_IN') ||
+              '1d') as any,
           },
         };
       },
     }),
   ],
-  controllers: [AuthController, OrganizationController],
+  controllers: [AuthController, OrganizationController, ProfileController],
   providers: [AuthService, OrganizationService, JwtStrategy],
   exports: [AuthService, OrganizationService, JwtModule],
 })
 export class OrganizationModule {}
-

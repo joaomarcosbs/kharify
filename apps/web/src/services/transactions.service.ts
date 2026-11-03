@@ -6,7 +6,12 @@ export const transactionsService = {
   findAll: async (): Promise<Transaction[]> => {
     const resp = await api.get<Transaction[]>('/transactions')
     const list = Array.isArray(resp.data) ? resp.data : []
-    return list.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    return list
+      .map((transaction) => ({
+        ...transaction,
+        amount: Number(transaction.amount),
+      }))
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
   },
 
   create: async (dto: CreateTransactionDto): Promise<Transaction> => {

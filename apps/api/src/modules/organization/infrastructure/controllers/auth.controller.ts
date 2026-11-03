@@ -33,5 +33,3 @@ export class AuthController {
     return this.authService.socialLogin(dto);
   }
 }
-
-

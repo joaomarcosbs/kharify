@@ -18,11 +18,13 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         (req: any) => {
           let token = null;
           if (req && req.headers && req.headers.cookie) {
-            const match = req.headers.cookie.match(/(?:^|;) *kharify_token=([^;]*)/);
+            const match = req.headers.cookie.match(
+              /(?:^|;) *kharify_token=([^;]*)/,
+            );
             if (match) token = match[1];
           }
           return token;
-        }
+        },
       ]),
       ignoreExpiration: false,
       secretOrKey: configService.get<string>('JWT_SECRET')!,
@@ -30,10 +32,10 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload: JwtPayload) {
-    return { 
-      userId: payload.sub, 
-      email: payload.email, 
-      organizationId: payload.organizationId 
+    return {
+      userId: payload.sub,
+      email: payload.email,
+      organizationId: payload.organizationId,
     };
   }
 }

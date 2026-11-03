@@ -1,11 +1,12 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { PageHeader } from "@/components/page-header"
 import { Switch } from "@/components/ui/switch"
 import { Button } from "@/components/ui/button"
 import { Save, ArrowLeft } from "lucide-react"
 import Link from "next/link"
+import { settingsService } from "@/services/settings.service"
 
 export default function PreferencesPage() {
   const [currency, setCurrency] = useState("BRL")
@@ -13,6 +14,26 @@ export default function PreferencesPage() {
   const [alertLowBalance, setAlertLowBalance] = useState(true)
   const [alertDebt, setAlertDebt] = useState(true)
   const [weeklyDigest, setWeeklyDigest] = useState(false)
+
+  useEffect(() => {
+    settingsService.getSettings().then((settings) => {
+      setCurrency(settings.baseCurrency)
+      setCycleStart(String(settings.cycleStartDay))
+      setAlertLowBalance(settings.lowBalanceAlert)
+      setAlertDebt(settings.debtAlert)
+      setWeeklyDigest(settings.weeklyDigest)
+    })
+  }, [])
+
+  const savePreferences = async () => {
+    await settingsService.updateSettings({
+      baseCurrency: currency as "BRL" | "USD" | "EUR",
+      cycleStartDay: Number(cycleStart),
+      lowBalanceAlert: alertLowBalance,
+      debtAlert: alertDebt,
+      weeklyDigest,
+    })
+  }
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 pb-12">
@@ -106,7 +127,7 @@ export default function PreferencesPage() {
         </div>
         
         <div className="flex justify-end mt-4">
-          <Button className="gap-2 rounded-xl">
+          <Button className="gap-2 rounded-xl" onClick={savePreferences}>
             <Save className="size-4" />
             Salvar Preferências
           </Button>

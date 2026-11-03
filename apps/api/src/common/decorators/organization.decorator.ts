@@ -1,8 +1,8 @@
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
 
 export const OrganizationId = createParamDecorator(
-    (data: unknown, ctx: ExecutionContext): string => {
-        const request = ctx.switchToHttp().getRequest();
-        return request.params.orgId;
-    },
+  (data: unknown, ctx: ExecutionContext): string => {
+    const request = ctx.switchToHttp().getRequest();
+    return request.organizationId ?? request.user?.organizationId;
+  },
 );

@@ -4,14 +4,14 @@
 
 API REST do **Kharify** — plataforma **open source e self-hosted** de gestão financeira pessoal, familiar e para pequenos negócios. A API centraliza autenticação, colaboração por organização, fluxo de caixa, contas a pagar/receber, dívidas, indicadores e sincronização de Open Finance.
 
-O projeto é um monólito modular em NestJS. Todas as rotas são expostas sob o prefixo `/v1` e consumidas pelo app em [`../kharify-web`](../kharify-web).
+O projeto é um monólito modular em NestJS. Todas as rotas são expostas sob o prefixo `/v1` e consumidas pelo app em [`../web`](../web).
 
 ## Funcionalidades
 
 | Área | Status | Descrição |
 |---|---|---|
 | **Autenticação** | ✅ Implementado | Cadastro, login com e-mail/senha e **login com Google (OAuth 2.0)**. JWT Bearer em todos os endpoints protegidos. |
-| **Organizações** | ✅ Implementado | Organizações pessoais ou empresariais, papéis (`owner`, `gestor`, `membro`) e gerenciamento de membros. |
+| **Organizações** | ✅ Implementado | Organizações pessoais ou empresariais, papéis (`owner`, `gestor`, `membro`) e cadastro de membros com senha inicial. |
 | **Fluxo de caixa** | ✅ Implementado | CRUD de contas, categorias, centros de custo, lançamentos e contas a pagar/receber com suporte a recorrência. |
 | **Dívidas** | ✅ Implementado | CRUD e simulações de amortização (Price e SAC). |
 | **Dashboard** | ✅ Implementado | Resumo financeiro, Health Score, fluxo mensal e recortes por categoria e centro de custo. |
@@ -50,6 +50,7 @@ Todos os caminhos são relativos a `/v1`.
 |---|---|
 | Saúde | `GET /` |
 | Auth | `POST /auth/register` · `POST /auth/login` · `POST /auth/google` |
+| Perfil | `GET/PATCH /profile` |
 | Organizações | `GET/POST /organizations` · `GET /organizations/active` · `PATCH/DELETE /organizations/:id` · `GET/POST /organizations/:id/members` |
 | Contas | `GET/POST /accounts` · `GET/PATCH/DELETE /accounts/:id` |
 | Categorias | `GET/POST /categories` · `GET/PATCH/DELETE /categories/:id` |
@@ -71,7 +72,7 @@ Todos os caminhos são relativos a `/v1`.
 ### Instalação
 
 ```bash
-cd kharify-api
+cd apps/api
 npm install
 cp .env.example .env
 ```
@@ -101,6 +102,25 @@ npm run dev
 ```
 
 A API estará disponível em `http://localhost:3080/v1`.
+
+## Dados de demonstração
+
+Para preencher as telas com dados realistas para screenshots, depois de aplicar as migrações execute:
+
+```bash
+npm run prisma:seed
+```
+
+O seed recria somente a organização de demonstração `Oliveira & Família` e não altera outras organizações do banco. Ele inclui contas, categorias, centros de custo, lançamentos dos últimos meses, contas a pagar/receber, uma dívida, um item Pluggy sandbox e registros de auditoria.
+
+Credenciais criadas:
+
+| Usuário | Senha | Papel |
+|---|---|---|
+| `demo@kharify.local` | `Kharify123!` | `owner` |
+| `rafael@kharify.local` | `Kharify123!` | `gestor` |
+
+Essas credenciais são destinadas apenas ao desenvolvimento local e não devem ser usadas em uma instalação exposta à internet.
 
 ## Login com Google
 

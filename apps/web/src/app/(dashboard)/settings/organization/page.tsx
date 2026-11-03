@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { PageHeader } from "@/components/page-header"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -9,12 +9,39 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Save, Building2 } from "lucide-react"
 import { ORGANIZATION_TYPES } from "@/types/enums"
 import type { OrganizationType } from "@/types/enums"
+import { useOrganizationStore } from "@/stores/organization-store"
+import { organizationService } from "@/services/organization.service"
+import { toast } from "sonner"
 
 export default function OrganizationPage() {
+  const activeOrganization = useOrganizationStore((state) => state.activeOrganization)
+  const setActiveOrganization = useOrganizationStore((state) => state.setActiveOrganization)
   const [form, setForm] = useState({
-    name: "Marcos Família",
+    name: "",
     type: "pessoal" as OrganizationType,
+    document: "",
   })
+
+  useEffect(() => {
+    if (activeOrganization) {
+      setForm({
+        name: activeOrganization.name,
+        type: activeOrganization.type,
+        document: activeOrganization.document ?? "",
+      })
+    }
+  }, [activeOrganization])
+
+  const saveOrganization = async () => {
+    if (!activeOrganization) return
+    try {
+      const updated = await organizationService.update(activeOrganization.id, form)
+      setActiveOrganization({ ...activeOrganization, ...updated })
+      toast.success("Organização atualizada.")
+    } catch {
+      toast.error("Não foi possível salvar a organização.")
+    }
+  }
 
   return (
     <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-8">
@@ -67,14 +94,15 @@ export default function OrganizationPage() {
               <Input 
                 id="orgCnpj" 
                 placeholder="00.000.000/0000-00" 
-                onChange={(e) => console.log(e.target.value)} 
+                value={form.document}
+                onChange={(e) => setForm((p) => ({ ...p, document: e.target.value }))}
               />
             </div>
           )}
         </div>
 
         <div className="flex justify-end pt-2">
-          <Button className="rounded-xl gap-2">
+          <Button className="rounded-xl gap-2" onClick={saveOrganization} disabled={!activeOrganization}>
             <Save className="size-4" />
             Salvar Alterações
           </Button>

@@ -2,14 +2,14 @@
 
 > *"Gerencie com graça o que foi graciosamente confiado a você."*
 
-Interface web do **Kharify** — plataforma **open source e self-hosted** de gestão financeira pessoal, familiar e para pequenos negócios. O app se conecta à [Kharify API](../kharify-api) para autenticação, organizações, contas, transações, contas recorrentes, dívidas, dashboard e Open Finance.
+Interface web do **Kharify** — plataforma **open source e self-hosted** de gestão financeira pessoal, familiar e para pequenos negócios. O app se conecta à [Kharify API](../api) para autenticação, organizações, contas, transações, contas recorrentes, dívidas, dashboard e Open Finance.
 
 ## Funcionalidades
 
 | Área | Status | Observações |
 |---|---|---|
 | **Login e cadastro** | ✅ Conectado à API | JWT em cookie HttpOnly; suporte a **login com Google** quando `NEXT_PUBLIC_GOOGLE_CLIENT_ID` estiver configurado. |
-| **Organizações** | ✅ Parcialmente conectado | Organização ativa persistida e enviada via `X-Organization-Id`. Tela de membros em desenvolvimento. |
+| **Organizações** | ✅ Conectado à API | Organização ativa, atualização de dados e cadastro de membros persistidos. O cadastro não envia e-mail automaticamente. |
 | **Dashboard** | ✅ Conectado à API | KPIs, Health Score, fluxo mensal e despesas por grupo. |
 | **Contas** | ✅ Conectado à API | CRUD completo e conexão/sincronização Pluggy. |
 | **Transações** | ✅ Conectado à API | Criação, edição, exclusão, filtros e busca global. |
@@ -17,8 +17,8 @@ Interface web do **Kharify** — plataforma **open source e self-hosted** de ges
 | **Dívidas** | ✅ Conectado à API | CRUD e simulação Price/SAC no dashboard. |
 | **Categorias** | ✅ Conectado à API | CRUD de suporte a formulários e lançamentos. |
 | **Open Finance** | ✅ Conectado à API | Pluggy Connect, cadastro manual de item, sincronização e desconexão. Sandbox incluso sem credenciais. |
-| **Preferências e aparência** | 🔧 Local | Salvas em `localStorage` via Zustand. |
-| **Perfil e organização** | 🔧 Parcial | Gerenciamento de perfil e dados da organização. |
+| **Preferências e aparência** | ✅ Local | Tema, ocultação de saldos, cor, moeda e alertas persistidos no navegador. |
+| **Perfil e organização** | ✅ Conectado à API | Nome, e-mail, telefone, CPF, avatar, senha e dados da organização persistidos. |
 | **Recuperação de senha** | 🔜 Planejado | Ainda não implementado. |
 
 ## Stack
@@ -45,6 +45,7 @@ Interface web do **Kharify** — plataforma **open source e self-hosted** de ges
 | `/home` | Visão geral financeira |
 | `/accounts`, `/accounts/[id]` | Contas e detalhe |
 | `/transactions` | Lançamentos financeiros |
+| `/categories` | Cadastro e gerenciamento de categorias |
 | `/fixed-income`, `/fixed-expenses` | Contas a receber e a pagar |
 | `/debts` | Dívidas e simulador |
 | `/settings/*` | Perfil, organização, membros e preferências |
@@ -72,12 +73,12 @@ Os serviços estão em `src/services/`. As server actions de autenticação (log
 ### Pré-requisitos
 
 - Node.js 20+
-- [Kharify API](../kharify-api) em execução — por padrão em `http://localhost:3080/v1`
+- [Kharify API](../api) em execução — por padrão em `http://localhost:3080/v1`
 
 ### Instalação
 
 ```bash
-cd kharify-web
+cd apps/web
 npm install
 cp .env.example .env.local
 ```
@@ -121,14 +122,12 @@ docker compose up --build
 
 Para habilitar o Google Login no ambiente Docker, edite o [`docker-compose.yml`](../docker-compose.yml) e descomente as linhas com `NEXT_PUBLIC_GOOGLE_CLIENT_ID` e `GOOGLE_CLIENT_ID`.
 
-Veja também o [README da API](../kharify-api/README.md) para configuração de JWT, banco, migrações e Pluggy.
+Veja também o [README da API](../api/README.md) para configuração de JWT, banco, migrações e Pluggy.
 
 ## Próximos incrementos
 
-- Persistir perfil, preferências e membros nas telas que hoje usam dados locais.
 - Implementar fluxo de recuperação de senha.
 - Login com Apple (Sign in with Apple).
-- Conectar o histórico de saldo por conta a dados reais.
 - Importação de extratos OFX/CSV.
 
 ## Tipografia

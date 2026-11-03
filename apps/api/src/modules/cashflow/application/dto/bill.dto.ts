@@ -1,4 +1,11 @@
-import { IsNotEmpty, IsEnum, IsNumber, IsDateString, IsOptional, IsUUID, Min } from 'class-validator';
+import {
+  IsEnum,
+  IsNumber,
+  IsDateString,
+  IsOptional,
+  IsUUID,
+  Min,
+} from 'class-validator';
 
 export enum BillTypeDto {
   pagar = 'pagar',

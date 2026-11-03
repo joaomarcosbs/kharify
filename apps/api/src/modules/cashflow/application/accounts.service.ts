@@ -7,7 +7,10 @@ import { Account } from '../domain/account.entity';
 export class AccountsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(organizationId: string, dto: CreateAccountDto): Promise<Account> {
+  async create(
+    organizationId: string,
+    dto: CreateAccountDto,
+  ): Promise<Account> {
     const data = await this.prisma.rls.account.create({
       data: {
         name: dto.name,
@@ -36,7 +39,11 @@ export class AccountsService {
 
     return Promise.all(
       accounts.map(async (acc) => {
-        const balance = await this.calculateAccountBalance(acc.id, Number(acc.initialBalance), organizationId);
+        const balance = await this.calculateAccountBalance(
+          acc.id,
+          Number(acc.initialBalance),
+          organizationId,
+        );
         const entity = new Account(
           acc.id,
           acc.name,
@@ -57,7 +64,11 @@ export class AccountsService {
 
     if (!account) throw new NotFoundException('Account not found');
 
-    const balance = await this.calculateAccountBalance(account.id, Number(account.initialBalance), organizationId);
+    const balance = await this.calculateAccountBalance(
+      account.id,
+      Number(account.initialBalance),
+      organizationId,
+    );
 
     const entity = new Account(
       account.id,
@@ -70,7 +81,11 @@ export class AccountsService {
     return entity;
   }
 
-  async update(organizationId: string, id: string, dto: UpdateAccountDto): Promise<Account> {
+  async update(
+    organizationId: string,
+    id: string,
+    dto: UpdateAccountDto,
+  ): Promise<Account> {
     await this.findOne(organizationId, id);
 
     const updated = await this.prisma.rls.account.update({
@@ -102,12 +117,20 @@ export class AccountsService {
     });
 
     const expenses = await rlsClient.transaction.aggregate({
-      where: { accountId, organizationId, type: { in: ['saida', 'transferencia'] } },
+      where: {
+        accountId,
+        organizationId,
+        type: { in: ['saida', 'transferencia'] },
+      },
       _sum: { amount: true },
     });
 
     const transfersIn = await rlsClient.transaction.aggregate({
-      where: { accountIdDest: accountId, organizationId, type: 'transferencia' },
+      where: {
+        accountIdDest: accountId,
+        organizationId,
+        type: 'transferencia',
+      },
       _sum: { amount: true },
     });
 

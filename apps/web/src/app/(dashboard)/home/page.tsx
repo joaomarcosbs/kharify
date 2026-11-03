@@ -22,13 +22,17 @@ export default function DashboardOverviewPage() {
 
   useEffect(() => {
     async function loadKPIs() {
-      const summary = await dashboardService.getSummary()
-      setTotalBalance(summary.totalBalance)
-      setIncome(summary.monthlyIncome)
-      setExpenses(summary.monthlyExpense)
-      setTotalDebt(summary.totalDebtBalance)
-      setUpcomingBills(summary.pendingBillsCount)
-      setHealthScore(summary.healthScore)
+      try {
+        const summary = await dashboardService.getSummary()
+        setTotalBalance(summary.totalBalance)
+        setIncome(summary.monthlyIncome)
+        setExpenses(summary.monthlyExpense)
+        setTotalDebt(summary.totalDebtBalance)
+        setUpcomingBills(summary.pendingBillsCount)
+        setHealthScore(summary.healthScore)
+      } catch {
+        setHealthScore(null)
+      }
     }
     loadKPIs()
   }, [])

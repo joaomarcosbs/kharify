@@ -1,4 +1,9 @@
-import { Injectable, CanActivate, ExecutionContext, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  CanActivate,
+  ExecutionContext,
+  ForbiddenException,
+} from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { UserRole } from '@prisma/client';
 import { ROLES_KEY } from '../decorators/roles.decorator';
@@ -24,10 +29,10 @@ export class RolesGuard implements CanActivate {
       return true;
     }
 
-    const requiredRoles = this.reflector.getAllAndOverride<UserRole[]>(ROLES_KEY, [
-      context.getHandler(),
-      context.getClass(),
-    ]);
+    const requiredRoles = this.reflector.getAllAndOverride<UserRole[]>(
+      ROLES_KEY,
+      [context.getHandler(), context.getClass()],
+    );
 
     if (!requiredRoles || requiredRoles.length === 0) {
       return true;
@@ -37,7 +42,9 @@ export class RolesGuard implements CanActivate {
     const userRole: UserRole = request.userRole;
 
     if (!userRole) {
-      throw new ForbiddenException('User role in organization could not be verified');
+      throw new ForbiddenException(
+        'User role in organization could not be verified',
+      );
     }
 
     const userWeight = ROLE_WEIGHTS[userRole] || 0;
@@ -48,7 +55,9 @@ export class RolesGuard implements CanActivate {
     });
 
     if (!hasPermission) {
-      throw new ForbiddenException('Insufficient permissions for this operation');
+      throw new ForbiddenException(
+        'Insufficient permissions for this operation',
+      );
     }
 
     return true;

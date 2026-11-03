@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { AuthService } from '../../../../src/modules/organization/application/auth.service';
 import { PrismaService } from '../../../../src/common/prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
 import { BadRequestException } from '@nestjs/common';
 
 describe('AuthService', () => {
@@ -13,12 +14,12 @@ describe('AuthService', () => {
       create: jest.fn(),
     },
     organization: {
-      create: jest.fn()
+      create: jest.fn(),
     },
     userOrganizationRole: {
-      create: jest.fn()
+      create: jest.fn(),
     },
-    $transaction: jest.fn()
+    $transaction: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -31,8 +32,14 @@ describe('AuthService', () => {
         },
         {
           provide: JwtService,
-          useValue: { sign: jest.fn().mockReturnValue('token-123') }
-        }
+          useValue: { sign: jest.fn().mockReturnValue('token-123') },
+        },
+        {
+          provide: ConfigService,
+          useValue: {
+            get: jest.fn().mockReturnValue(undefined),
+          },
+        },
       ],
     }).compile();
 
@@ -51,16 +58,16 @@ describe('AuthService', () => {
           password: 'password1',
           document: '12345678900',
           organizationName: 'Familia',
-          organizationType: 'pessoal' as any
-        })
+          organizationType: 'pessoal' as any,
+        }),
       ).rejects.toThrow(BadRequestException);
     });
 
     it('deve avançar e iniciar transação de banco se tudo estiver limpo', async () => {
       mockPrisma.user.findUnique.mockResolvedValue(null);
-      mockPrisma.$transaction.mockResolvedValue({ 
-          user: { id: 'u1', email: 'j@j.com' }, 
-          org: { id: 'o1' } 
+      mockPrisma.$transaction.mockResolvedValue({
+        user: { id: 'u1', email: 'j@j.com' },
+        org: { id: 'o1' },
       });
 
       const res = await service.register({
@@ -69,7 +76,7 @@ describe('AuthService', () => {
         password: 'password1',
         document: '12345678900',
         organizationName: 'Familia',
-        organizationType: 'pessoal' as any
+        organizationType: 'pessoal' as any,
       });
 
       expect(res.access_token).toBe('token-123');

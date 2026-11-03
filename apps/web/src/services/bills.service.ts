@@ -6,22 +6,27 @@ export const billsService = {
   findAll: async (): Promise<Bill[]> => {
     const resp = await api.get<Bill[]>('/bills')
     const list = Array.isArray(resp.data) ? resp.data : []
-    return list.sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())
+    return list
+      .map((bill) => ({
+        ...bill,
+        amount: Number(bill.amount),
+      }))
+      .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())
   },
 
   findOne: async (id: string): Promise<Bill> => {
     const resp = await api.get<Bill>(`/bills/${id}`)
-    return resp.data
+    return { ...resp.data, amount: Number(resp.data.amount) }
   },
 
   create: async (dto: CreateBillDto): Promise<Bill> => {
     const resp = await api.post<Bill>('/bills', dto)
-    return resp.data
+    return { ...resp.data, amount: Number(resp.data.amount) }
   },
 
   update: async (id: string, dto: UpdateBillDto): Promise<Bill> => {
     const resp = await api.patch<Bill>(`/bills/${id}`, dto)
-    return resp.data
+    return { ...resp.data, amount: Number(resp.data.amount) }
   },
 
   remove: async (id: string): Promise<void> => {

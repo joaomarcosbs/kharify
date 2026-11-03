@@ -66,7 +66,7 @@ function charToValue(char: string): number {
 
 function isValidCnpj(cnpj: string): boolean {
   // Remove formatação (pontos, barras, traços)
-  const cleaned = cnpj.replace(/[.\-\/]/g, '').toUpperCase();
+  const cleaned = cnpj.replace(/[.\-/]/g, '').toUpperCase();
 
   if (cleaned.length !== 14) return false;
 
@@ -110,7 +110,7 @@ function isValidCnpj(cnpj: string): boolean {
 // ============================================
 
 export function isValidDocument(value: string): boolean {
-  const cleaned = value.replace(/[.\-\/]/g, '');
+  const cleaned = value.replace(/[.\-/]/g, '');
 
   if (cleaned.length === 11) return isValidCpf(value);
   if (cleaned.length === 14) return isValidCnpj(value);

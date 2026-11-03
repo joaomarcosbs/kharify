@@ -41,31 +41,20 @@ function unwrap<T>(responseData: unknown): T | null {
 
 export const dashboardService = {
   getSummary: async (): Promise<DashboardSummary> => {
-    try {
-      const resp = await api.get('/dashboard/summary');
-      const raw = unwrap<DashboardSummary>(resp.data);
-      if (raw) {
-        return {
-          totalBalance: Number(raw.totalBalance) || 0,
-          monthlyIncome: Number(raw.monthlyIncome) || 0,
-          monthlyExpense: Number(raw.monthlyExpense) || 0,
-          pendingBillsTotal: Number(raw.pendingBillsTotal) || 0,
-          pendingBillsCount: Number(raw.pendingBillsCount) || 0,
-          totalDebtBalance: Number(raw.totalDebtBalance) || 0,
-          healthScore: raw.healthScore != null ? Number(raw.healthScore) : 75,
-        };
-      }
-    } catch {
-      // Fallback
+    const resp = await api.get('/dashboard/summary');
+    const raw = unwrap<DashboardSummary>(resp.data);
+    if (!raw || raw.healthScore == null) {
+      throw new Error('Health Score não foi retornado pela API.');
     }
+
     return {
-      totalBalance: 0,
-      monthlyIncome: 0,
-      monthlyExpense: 0,
-      pendingBillsTotal: 0,
-      pendingBillsCount: 0,
-      totalDebtBalance: 0,
-      healthScore: 75,
+      totalBalance: Number(raw.totalBalance) || 0,
+      monthlyIncome: Number(raw.monthlyIncome) || 0,
+      monthlyExpense: Number(raw.monthlyExpense) || 0,
+      pendingBillsTotal: Number(raw.pendingBillsTotal) || 0,
+      pendingBillsCount: Number(raw.pendingBillsCount) || 0,
+      totalDebtBalance: Number(raw.totalDebtBalance) || 0,
+      healthScore: Number(raw.healthScore),
     };
   },
 

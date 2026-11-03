@@ -1,4 +1,9 @@
-import { Injectable, NestInterceptor, ExecutionContext, CallHandler } from '@nestjs/common';
+import {
+  Injectable,
+  NestInterceptor,
+  ExecutionContext,
+  CallHandler,
+} from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { AuditService } from '../audit/audit.service';
@@ -16,7 +21,8 @@ export class AuditLogInterceptor implements NestInterceptor {
       return next.handle();
     }
 
-    const organizationId = request.organizationId || request.user?.organizationId;
+    const organizationId =
+      request.organizationId || request.user?.organizationId;
     const userId = request.user?.userId;
     const url = request.url || '';
     const tableName = url.split('/')[2] || 'unknown';

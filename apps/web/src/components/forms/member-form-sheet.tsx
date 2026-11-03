@@ -25,6 +25,8 @@ import { UserPlus, Save } from "lucide-react"
 const schema = z.object({
   name: z.string().min(1, "O nome do membro é obrigatório."),
   email: z.email("Insira um e-mail válido."),
+  document: z.string().min(11, "Informe um CPF válido."),
+  password: z.string().min(8, "A senha deve ter pelo menos 8 caracteres."),
   role: z.custom<UserRole>(
     (val) => ["owner", "gestor", "membro"].includes(val as string),
     { message: "Selecione uma função." }
@@ -52,6 +54,8 @@ export function MemberFormSheet({ onSubmit }: MemberFormSheetProps) {
     defaultValues: {
       name: "",
       email: "",
+      document: "",
+      password: "",
       role: "membro",
     },
   })
@@ -75,19 +79,14 @@ export function MemberFormSheet({ onSubmit }: MemberFormSheetProps) {
       </SheetTrigger>
       <SheetContent className="sm:max-w-[440px] overflow-y-auto">
         <SheetHeader>
-          <SheetTitle>Convidar Membro</SheetTitle>
-          <SheetDescription>Adicione um membro e defina suas permissões no sistema.</SheetDescription>
+        <SheetTitle>Cadastrar Membro</SheetTitle>
+        <SheetDescription>Cadastre o membro e envie a senha inicial manualmente.</SheetDescription>
         </SheetHeader>
 
         <form onSubmit={handleSubmit(processForm)} className="flex flex-col gap-5 mt-6 w-full">
           <div className="flex flex-col gap-2">
-            <Label htmlFor="member-name">Nome do membro *</Label>
-            <Input
-              id="member-name"
-              placeholder="Ex: João Silva"
-              {...register("name")}
-              aria-invalid={!!errors.name}
-            />
+            <Label htmlFor="member-name">Nome completo *</Label>
+            <Input id="member-name" placeholder="Ex: João Silva" {...register("name")} aria-invalid={!!errors.name} />
             {errors.name && <FieldError errors={[errors.name]} />}
           </div>
 
@@ -101,6 +100,28 @@ export function MemberFormSheet({ onSubmit }: MemberFormSheetProps) {
               aria-invalid={!!errors.email}
             />
             {errors.email && <FieldError errors={[errors.email]} />}
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="member-document">CPF *</Label>
+            <Input id="member-document" placeholder="000.000.000-00" {...register("document")} aria-invalid={!!errors.document} />
+            {errors.document && <FieldError errors={[errors.document]} />}
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="member-password">Senha inicial *</Label>
+            <div className="flex gap-2">
+              <Input id="member-password" type="text" {...register("password")} aria-invalid={!!errors.password} />
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => reset((current) => ({ ...current, password: `${Math.random().toString(36).slice(2, 8)}A1!` }))}
+              >
+                Gerar
+              </Button>
+            </div>
+            {errors.password && <FieldError errors={[errors.password]} />}
+            <p className="text-xs text-muted-foreground">Copie a senha e envie ao membro. Ele poderá alterá-la depois.</p>
           </div>
 
           <div className="flex flex-col gap-2">
@@ -130,7 +151,7 @@ export function MemberFormSheet({ onSubmit }: MemberFormSheetProps) {
 
           <Button type="submit" className="rounded-xl gap-2 mt-4">
             <Save className="size-4" />
-            Enviar Convite
+            Adicionar Membro
           </Button>
         </form>
       </SheetContent>

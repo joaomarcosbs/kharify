@@ -8,7 +8,14 @@ export class DashboardService {
   async getSummary(organizationId: string) {
     const now = new Date();
     const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+    const lastDayOfMonth = new Date(
+      now.getFullYear(),
+      now.getMonth() + 1,
+      0,
+      23,
+      59,
+      59,
+    );
 
     // 1. Accounts total balance
     const accounts = await this.prisma.rls.account.findMany({
@@ -23,7 +30,11 @@ export class DashboardService {
         _sum: { amount: true },
       });
       const expenses = await this.prisma.rls.transaction.aggregate({
-        where: { accountId: acc.id, organizationId, type: { in: ['saida', 'transferencia'] } },
+        where: {
+          accountId: acc.id,
+          organizationId,
+          type: { in: ['saida', 'transferencia'] },
+        },
         _sum: { amount: true },
       });
       const transfersIn = await this.prisma.rls.transaction.aggregate({
@@ -31,7 +42,11 @@ export class DashboardService {
         _sum: { amount: true },
       });
 
-      totalBalance += initial + Number(incomes._sum.amount || 0) + Number(transfersIn._sum.amount || 0) - Number(expenses._sum.amount || 0);
+      totalBalance +=
+        initial +
+        Number(incomes._sum.amount || 0) +
+        Number(transfersIn._sum.amount || 0) -
+        Number(expenses._sum.amount || 0);
     }
 
     // 2. Current month incomes & expenses
@@ -63,7 +78,10 @@ export class DashboardService {
       },
     });
 
-    const pendingBillsTotal = pendingBills.reduce((sum, b) => sum + Number(b.amount), 0);
+    const pendingBillsTotal = pendingBills.reduce(
+      (sum, b) => sum + Number(b.amount),
+      0,
+    );
     const pendingBillsCount = pendingBills.length;
 
     // 4. Debt balances
@@ -83,17 +101,34 @@ export class DashboardService {
     }
 
     // 5. Kharify Health Score calculation (0 - 100)
-    let healthScore = 75; // Default baseline score
-    if (monthlyIncome > 0) {
-      const savingsRate = Math.max(0, (monthlyIncome - monthlyExpense) / monthlyIncome);
-      const debtRatio = totalDebtBalance / (monthlyIncome * 12);
-      const reserveRatio = Math.min(1, totalBalance / (monthlyExpense * 6 || 1));
+    // The score is composed only from the financial data calculated above.
+    const clamp = (value: number) => Math.min(1, Math.max(0, value));
+    const hasFinancialData =
+      totalBalance !== 0 ||
+      monthlyIncome !== 0 ||
+      monthlyExpense !== 0 ||
+      totalDebtBalance !== 0;
 
-      healthScore = Math.round(
-        Math.min(100, Math.max(0, 100 - debtRatio * 30 + savingsRate * 40 + reserveRatio * 30))
-      );
-    } else if (totalDebtBalance > 0 && totalBalance <= 0) {
-      healthScore = 30;
+    let healthScore = 0;
+    if (hasFinancialData) {
+      const savingsScore =
+        monthlyIncome > 0
+          ? clamp((monthlyIncome - monthlyExpense) / monthlyIncome) * 40
+          : 0;
+      const reserveScore =
+        monthlyExpense > 0
+          ? clamp(totalBalance / (monthlyExpense * 6)) * 30
+          : totalBalance > 0
+            ? 30
+            : 0;
+      const debtScore =
+        monthlyIncome > 0
+          ? (1 - clamp(totalDebtBalance / (monthlyIncome * 12))) * 30
+          : totalDebtBalance === 0
+            ? 30
+            : 0;
+
+      healthScore = Math.round(savingsScore + reserveScore + debtScore);
     }
 
     return {
@@ -108,9 +143,9 @@ export class DashboardService {
   }
 
   async getCashflowMonthly(organizationId: string) {
-    const months: Array<{ month: string; income: number; expense: number }> = [];
+    const months: Array<{ month: string; income: number; expense: number }> =
+      [];
     const now = new Date();
-
 
     for (let i = 5; i >= 0; i--) {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
@@ -135,7 +170,10 @@ export class DashboardService {
         _sum: { amount: true },
       });
 
-      const monthName = d.toLocaleString('pt-BR', { month: 'short', year: '2-digit' });
+      const monthName = d.toLocaleString('pt-BR', {
+        month: 'short',
+        year: '2-digit',
+      });
 
       months.push({
         month: monthName,
@@ -163,12 +201,19 @@ export class DashboardService {
       },
     });
 
-    const categoryMap = new Map<string, { id: string; name: string; amount: number }>();
+    const categoryMap = new Map<
+      string,
+      { id: string; name: string; amount: number }
+    >();
 
     for (const t of transactions) {
       const catName = t.category?.name || 'Sem Categoria';
       const catId = t.categoryId || 'uncategorized';
-      const existing = categoryMap.get(catId) || { id: catId, name: catName, amount: 0 };
+      const existing = categoryMap.get(catId) || {
+        id: catId,
+        name: catName,
+        amount: 0,
+      };
       existing.amount += Number(t.amount);
       categoryMap.set(catId, existing);
     }
@@ -191,13 +236,28 @@ export class DashboardService {
       },
     });
 
-    const costCenterMap = new Map<string, { id: string; name: string; type?: string; income: number; expense: number }>();
+    const costCenterMap = new Map<
+      string,
+      {
+        id: string;
+        name: string;
+        type?: string;
+        income: number;
+        expense: number;
+      }
+    >();
 
     for (const t of transactions) {
       const ccName = t.costCenter?.name || 'Geral';
       const ccId = t.costCenterId || 'general';
       const ccType = t.costCenter?.type;
-      const existing = costCenterMap.get(ccId) || { id: ccId, name: ccName, type: ccType, income: 0, expense: 0 };
+      const existing = costCenterMap.get(ccId) || {
+        id: ccId,
+        name: ccName,
+        type: ccType,
+        income: 0,
+        expense: 0,
+      };
 
       if (t.type === 'entrada') {
         existing.income += Number(t.amount);

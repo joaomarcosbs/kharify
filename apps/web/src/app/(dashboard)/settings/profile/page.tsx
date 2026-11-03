@@ -1,26 +1,78 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { PageHeader } from "@/components/page-header"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Save, Camera } from "lucide-react"
+import { profileService } from "@/services/profile.service"
+import { useUserStore } from "@/stores/user-store"
+import { toast } from "sonner"
 
 export default function ProfilePage() {
+  const setUser = useUserStore((state) => state.setUser)
   const [form, setForm] = useState({
-    name: "João Marcos",
-    email: "joao@kharify.com",
-    phone: "(11) 99999-8888",
-    cpf: "123.456.789-00",
+    name: "",
+    email: "",
+    phone: "",
+    cpf: "",
+    avatarUrl: "",
     currentPassword: "",
     newPassword: "",
     confirmPassword: "",
   })
 
+  useEffect(() => {
+    profileService.get().then((profile) => {
+      setUser({
+        id: profile.id,
+        name: profile.name,
+        email: profile.email,
+        avatarUrl: profile.avatarUrl,
+      })
+      setForm((current) => ({
+        ...current,
+        name: profile.name,
+        email: profile.email,
+        phone: profile.phone ?? "",
+        cpf: profile.document ?? "",
+        avatarUrl: profile.avatarUrl ?? "",
+      }))
+    }).catch(() => toast.error("Não foi possível carregar o perfil."))
+  }, [setUser])
+
   const handleChange = (field: string, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }))
+  }
+
+  const saveProfile = async () => {
+    if (form.newPassword && form.newPassword !== form.confirmPassword) {
+      toast.error("A confirmação da nova senha não confere.")
+      return
+    }
+    try {
+      const updatedProfile = await profileService.update({
+        name: form.name,
+        email: form.email,
+        phone: form.phone || undefined,
+        document: form.cpf || undefined,
+        avatarUrl: form.avatarUrl || undefined,
+        currentPassword: form.currentPassword || undefined,
+        newPassword: form.newPassword || undefined,
+      })
+      setUser({
+        id: updatedProfile.id,
+        name: updatedProfile.name,
+        email: updatedProfile.email,
+        avatarUrl: updatedProfile.avatarUrl,
+      })
+      setForm((current) => ({ ...current, currentPassword: "", newPassword: "", confirmPassword: "" }))
+      toast.success("Perfil atualizado.")
+    } catch {
+      toast.error("Não foi possível salvar o perfil.")
+    }
   }
 
   return (
@@ -39,12 +91,25 @@ export default function ProfilePage() {
         <div className="flex flex-col items-center gap-4 rounded-[24px] bg-background dark:bg-sidebar p-8 shadow-[0_20px_40px_-5px_rgba(0,0,0,0.06)] dark:shadow-[0_20px_40px_-5px_rgba(0,0,0,0.2)] h-fit">
           <div className="relative group">
             <Avatar className="size-24 rounded-full">
-              <AvatarImage src="" alt="João Marcos" />
-              <AvatarFallback className="rounded-[inherit] bg-primary/10 text-primary text-2xl">JM</AvatarFallback>
+            <AvatarImage src={form.avatarUrl || undefined} alt={form.name} />
+            <AvatarFallback className="rounded-[inherit] bg-primary/10 text-primary text-2xl">
+              {form.name.split(" ").map((part) => part[0]).join("").slice(0, 2).toUpperCase() || "U"}
+            </AvatarFallback>
             </Avatar>
             <label className="absolute inset-0 rounded-full bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer">
               <Camera className="size-6 text-white" />
-              <input type="file" className="hidden" accept="image/*" />
+              <input
+                type="file"
+                className="hidden"
+                accept="image/*"
+                onChange={(event) => {
+                  const file = event.target.files?.[0]
+                  if (!file) return
+                  const reader = new FileReader()
+                  reader.onload = () => handleChange("avatarUrl", String(reader.result))
+                  reader.readAsDataURL(file)
+                }}
+              />
             </label>
           </div>
           <div className="text-center">
@@ -95,7 +160,7 @@ export default function ProfilePage() {
           </div>
 
           <div className="flex justify-end pt-2">
-            <Button className="rounded-xl gap-2">
+            <Button className="rounded-xl gap-2" onClick={saveProfile}>
               <Save className="size-4" />
               Salvar Alterações
             </Button>

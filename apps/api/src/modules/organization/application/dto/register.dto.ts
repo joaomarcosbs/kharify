@@ -1,4 +1,10 @@
-import { IsEmail, IsNotEmpty, MinLength, IsEnum, IsOptional, IsString } from 'class-validator';
+import {
+  IsEmail,
+  IsNotEmpty,
+  MinLength,
+  IsEnum,
+  IsString,
+} from 'class-validator';
 import { IsDocument } from '../../../../common/validators/document.validator';
 
 export enum OrganizationTypeDto {

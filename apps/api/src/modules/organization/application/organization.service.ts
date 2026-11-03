@@ -1,7 +1,16 @@
-import { Injectable, NotFoundException, BadRequestException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+} from '@nestjs/common';
 import { PrismaService } from '../../../common/prisma/prisma.service';
-import { CreateOrganizationDto, UpdateOrganizationDto, AddMemberDto } from './dto/organization.dto';
+import {
+  CreateOrganizationDto,
+  UpdateOrganizationDto,
+  AddMemberDto,
+} from './dto/organization.dto';
 import { UserRole } from '@prisma/client';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class OrganizationService {
@@ -108,34 +117,32 @@ export class OrganizationService {
       where: { email: dto.email },
     });
 
-    if (!targetUser) {
-      throw new NotFoundException(`User with email "${dto.email}" not found`);
+    if (targetUser) {
+      throw new ConflictException(
+        'Já existe um usuário cadastrado com este e-mail.',
+      );
     }
 
-    const existingRole = await this.prisma.userOrganizationRole.findUnique({
-      where: {
-        userId_organizationId: {
-          userId: targetUser.id,
-          organizationId,
+    const passwordHash = await bcrypt.hash(
+      dto.password,
+      await bcrypt.genSalt(),
+    );
+    return this.prisma.$transaction(async (tx) => {
+      const user = await tx.user.create({
+        data: {
+          name: dto.name,
+          email: dto.email,
+          document: dto.document,
+          passwordHash,
         },
-      },
-    });
+        select: { id: true, name: true, email: true, document: true },
+      });
 
-    if (existingRole) {
-      throw new ConflictException('User is already a member of this organization');
-    }
+      await tx.userOrganizationRole.create({
+        data: { userId: user.id, organizationId, role: dto.role },
+      });
 
-    return this.prisma.userOrganizationRole.create({
-      data: {
-        userId: targetUser.id,
-        organizationId,
-        role: dto.role,
-      },
-      include: {
-        user: {
-          select: { id: true, name: true, email: true },
-        },
-      },
+      return { ...user, role: dto.role };
     });
   }
 }

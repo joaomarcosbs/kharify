@@ -1,15 +1,17 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useEffect, useState, useMemo } from "react"
 import { ColumnDef } from "@tanstack/react-table"
 import { PageHeader } from "@/components/page-header"
 import { DataTable } from "@/components/dashboard/data-table"
-import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { USER_ROLES } from "@/types/enums"
 import type { UserRole } from "@/types/enums"
 import { MemberFormSheet } from "@/components/forms/member-form-sheet"
-import { UserPlus, Crown, Shield, User } from "lucide-react"
+import { Crown, Shield, User } from "lucide-react"
+import { useOrganizationStore } from "@/stores/organization-store"
+import { organizationService } from "@/services/organization.service"
+import { toast } from "sonner"
 
 interface Member {
   id: string
@@ -31,14 +33,25 @@ const roleColors = {
   membro: "text-muted-foreground bg-muted/50",
 }
 
-const mockMembers: Member[] = [
-  { id: "m-001", name: "João Marcos", email: "joao@kharify.com", role: "owner", initials: "JM" },
-  { id: "m-002", name: "Maria Silva", email: "maria@kharify.com", role: "gestor", initials: "MS" },
-  { id: "m-003", name: "Pedro Santos", email: "pedro@kharify.com", role: "membro", initials: "PS" },
-]
-
 export default function MembersPage() {
-  const [members] = useState<Member[]>(mockMembers)
+  const activeOrganization = useOrganizationStore((state) => state.activeOrganization)
+  const [members, setMembers] = useState<Member[]>([])
+
+  const loadMembers = async () => {
+    if (!activeOrganization) return
+    const data = await organizationService.getMembers(activeOrganization.id)
+    setMembers(data.map((member) => ({ ...member, initials: member.name.split(" ").map((part) => part[0]).join("").slice(0, 2).toUpperCase() })))
+  }
+
+  useEffect(() => {
+    if (!activeOrganization) return
+    organizationService.getMembers(activeOrganization.id)
+      .then((data) => setMembers(data.map((member) => ({
+        ...member,
+        initials: member.name.split(" ").map((part) => part[0]).join("").slice(0, 2).toUpperCase(),
+      }))))
+      .catch(() => toast.error("Não foi possível carregar os membros."))
+  }, [activeOrganization])
 
   const columns = useMemo<ColumnDef<Member, unknown>[]>(() => [
     {
@@ -85,7 +98,22 @@ export default function MembersPage() {
           { label: "Membros" },
         ]}
         actions={
-          <MemberFormSheet />
+          <MemberFormSheet onSubmit={async (data) => {
+            if (!activeOrganization) return
+            try {
+              await organizationService.addMember(activeOrganization.id, {
+                name: data.name,
+                email: data.email,
+                document: data.document,
+                password: data.password,
+                role: data.role as UserRole,
+              })
+              await loadMembers()
+              toast.success("Membro adicionado.")
+            } catch {
+              toast.error("Não foi possível adicionar o membro.")
+            }
+          }} />
         }
       />
 

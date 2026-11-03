@@ -1,6 +1,17 @@
-import { Controller, Get, Post, Patch, Body, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Body,
+  Param,
+  Delete,
+} from '@nestjs/common';
 import { TransactionsService } from '../../application/transactions.service';
-import { CreateTransactionDto, UpdateTransactionDto } from '../../application/dto/transaction.dto';
+import {
+  CreateTransactionDto,
+  UpdateTransactionDto,
+} from '../../application/dto/transaction.dto';
 import { OrganizationId } from '../../../../common/decorators/organization.decorator';
 import { Roles } from '../../../../common/decorators/roles.decorator';
 import { UserRole } from '@prisma/client';
@@ -25,7 +36,7 @@ export class TransactionsController {
   update(
     @OrganizationId() orgId: string,
     @Param('id') id: string,
-    @Body() dto: UpdateTransactionDto
+    @Body() dto: UpdateTransactionDto,
   ) {
     return this.transactionsService.update(orgId, id, dto);
   }

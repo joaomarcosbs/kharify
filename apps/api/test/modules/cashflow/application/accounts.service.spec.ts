@@ -4,7 +4,7 @@ import { PrismaService } from '../../../../src/common/prisma/prisma.service';
 
 describe('AccountsService', () => {
   let service: AccountsService;
-  
+
   // Fake aggregate response
   const mockAggregate = jest.fn();
 
@@ -22,22 +22,22 @@ describe('AccountsService', () => {
                   name: 'Teste',
                   type: 'conta',
                   initialBalance: 1000,
-                  initialBalanceDate: new Date()
+                  initialBalanceDate: new Date(),
                 }),
                 findUnique: jest.fn().mockResolvedValue({
                   id: 'acc-1',
                   name: 'Teste',
                   type: 'conta',
                   initialBalance: 1000,
-                  initialBalanceDate: new Date()
-                })
+                  initialBalanceDate: new Date(),
+                }),
               },
               transaction: {
-                aggregate: mockAggregate
-              }
-            }
-          }
-        }
+                aggregate: mockAggregate,
+              },
+            },
+          },
+        },
       ],
     }).compile();
 
@@ -49,9 +49,9 @@ describe('AccountsService', () => {
     it('deve somar initialBalance com entradas e abater saídas via aggregator', async () => {
       // Mock para as três queries: incomes, expenses, transfersIn
       mockAggregate
-        .mockResolvedValueOnce({ _sum: { amount: 500 } })   // incomes
-        .mockResolvedValueOnce({ _sum: { amount: 200 } })   // expenses
-        .mockResolvedValueOnce({ _sum: { amount: 0 } });    // transfersIn
+        .mockResolvedValueOnce({ _sum: { amount: 500 } }) // incomes
+        .mockResolvedValueOnce({ _sum: { amount: 200 } }) // expenses
+        .mockResolvedValueOnce({ _sum: { amount: 0 } }); // transfersIn
 
       const account = await service.findOne('org-1', 'acc-1');
 

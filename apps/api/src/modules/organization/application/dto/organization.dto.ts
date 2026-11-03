@@ -1,5 +1,13 @@
-import { IsNotEmpty, IsEnum, IsOptional, IsString, IsEmail } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsEnum,
+  IsOptional,
+  IsString,
+  IsEmail,
+  MinLength,
+} from 'class-validator';
 import { OrganizationType, UserRole } from '@prisma/client';
+import { IsDocument } from '../../../../common/validators/document.validator';
 
 export class CreateOrganizationDto {
   @IsNotEmpty()
@@ -30,8 +38,22 @@ export class UpdateOrganizationDto {
 
 export class AddMemberDto {
   @IsNotEmpty()
+  @IsString()
+  name: string;
+
+  @IsNotEmpty()
   @IsEmail()
   email: string;
+
+  @IsNotEmpty()
+  @IsString()
+  @IsDocument({ message: 'O CPF informado não é válido.' })
+  document: string;
+
+  @IsNotEmpty()
+  @IsString()
+  @MinLength(8)
+  password: string;
 
   @IsEnum(UserRole)
   role: UserRole;

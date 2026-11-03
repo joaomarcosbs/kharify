@@ -26,6 +26,7 @@ pnpm-debug.log*
 # Prisma/local generated files
 *.db
 *.db-journal
+*seed.ts
 
 # macOS
 .DS_Store

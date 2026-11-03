@@ -1,6 +1,17 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+} from '@nestjs/common';
 import { CostCentersService } from '../../application/cost-centers.service';
-import { CreateCostCenterDto, UpdateCostCenterDto } from '../../application/dto/cost-center.dto';
+import {
+  CreateCostCenterDto,
+  UpdateCostCenterDto,
+} from '../../application/dto/cost-center.dto';
 import { OrganizationId } from '../../../../common/decorators/organization.decorator';
 import { Roles } from '../../../../common/decorators/roles.decorator';
 import { UserRole } from '@prisma/client';
@@ -27,7 +38,11 @@ export class CostCentersController {
 
   @Roles(UserRole.owner, UserRole.gestor)
   @Patch(':id')
-  update(@OrganizationId() orgId: string, @Param('id') id: string, @Body() dto: UpdateCostCenterDto) {
+  update(
+    @OrganizationId() orgId: string,
+    @Param('id') id: string,
+    @Body() dto: UpdateCostCenterDto,
+  ) {
     return this.costCentersService.update(orgId, id, dto);
   }
 

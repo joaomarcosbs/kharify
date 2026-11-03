@@ -7,6 +7,7 @@ import { useTheme } from "next-themes"
 import { Moon, Sun, Monitor, ArrowLeft } from "lucide-react"
 import { usePrivacyStore } from "@/stores/privacy-store"
 import Link from "next/link"
+import { settingsService } from "@/services/settings.service"
 
 const accentColors = [
   { name: "violet", label: "Violeta", value: "#8b5cf6" },
@@ -17,6 +18,14 @@ const accentColors = [
   { name: "cyan", label: "Ciano", value: "#06b6d4" },
 ]
 
+function applyAccent(name: string) {
+  const color = accentColors.find((item) => item.name === name)?.value
+  if (color && typeof document !== "undefined") {
+    document.documentElement.style.setProperty("--primary", color)
+    document.documentElement.style.setProperty("--ring", color)
+  }
+}
+
 export default function AppearancePage() {
   const [mounted, setMounted] = useState(false)
   const [accent, setAccent] = useState("violet")
@@ -26,7 +35,18 @@ export default function AppearancePage() {
 
   useEffect(() => {
     setMounted(true)
+    settingsService.getSettings().then((settings) => {
+      setAccent(settings.accentColor)
+      setHideBalances(settings.hideBalancesOnStartup)
+      applyAccent(settings.accentColor)
+    })
   }, [])
+
+  const chooseAccent = (name: string) => {
+    setAccent(name)
+    applyAccent(name)
+    void settingsService.updateSettings({ accentColor: name })
+  }
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 pb-12">
@@ -97,7 +117,7 @@ export default function AppearancePage() {
               {accentColors.map((color) => (
                 <button
                   key={color.name}
-                  onClick={() => setAccent(color.name)}
+                  onClick={() => chooseAccent(color.name)}
                   className={`group relative flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all w-20 ${
                     accent === color.name
                       ? "border-foreground bg-foreground/5 scale-105"
@@ -115,9 +135,7 @@ export default function AppearancePage() {
                 </button>
               ))}
             </div>
-            <p className="text-xs text-muted-foreground mt-4 italic">
-              Em breve: a cor selecionada será aplicada em toda a plataforma.
-            </p>
+            <p className="text-xs text-muted-foreground mt-4">A preferência fica salva neste dispositivo.</p>
           </div>
           
         </div>

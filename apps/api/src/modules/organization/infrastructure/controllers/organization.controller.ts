@@ -1,6 +1,18 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Body,
+  Param,
+} from '@nestjs/common';
 import { OrganizationService } from '../../application/organization.service';
-import { CreateOrganizationDto, UpdateOrganizationDto, AddMemberDto } from '../../application/dto/organization.dto';
+import {
+  CreateOrganizationDto,
+  UpdateOrganizationDto,
+  AddMemberDto,
+} from '../../application/dto/organization.dto';
 import { CurrentUser } from '../../../../core/decorators/current-user.decorator';
 import { Roles } from '../../../../common/decorators/roles.decorator';
 import { OrganizationId } from '../../../../common/decorators/organization.decorator';
@@ -21,7 +33,10 @@ export class OrganizationController {
   }
 
   @Get('active')
-  getActiveOrganization(@CurrentUser() user: any, @OrganizationId() orgId: string) {
+  getActiveOrganization(
+    @CurrentUser() user: any,
+    @OrganizationId() orgId: string,
+  ) {
     return this.organizationService.getActiveOrganization(orgId, user.userId);
   }
 

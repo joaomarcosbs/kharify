@@ -1,4 +1,13 @@
-import { IsNotEmpty, IsEnum, IsNumber, IsDateString, IsOptional, IsUUID, Min, ValidateIf } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsEnum,
+  IsNumber,
+  IsDateString,
+  IsOptional,
+  IsUUID,
+  Min,
+  ValidateIf,
+} from 'class-validator';
 
 export enum DebtStatusDto {
   ativa = 'ativa',
@@ -74,14 +83,13 @@ export class SimulateDebtDto {
   @IsEnum(['extraPayment', 'targetMonths'])
   simulationType: 'extraPayment' | 'targetMonths';
 
-  @ValidateIf(o => o.simulationType === 'extraPayment')
+  @ValidateIf((o) => o.simulationType === 'extraPayment')
   @IsNumber()
   @Min(0.01)
   extraPaymentAmount?: number;
 
-  @ValidateIf(o => o.simulationType === 'targetMonths')
+  @ValidateIf((o) => o.simulationType === 'targetMonths')
   @IsNumber()
   @Min(1)
   targetMonths?: number;
 }
-

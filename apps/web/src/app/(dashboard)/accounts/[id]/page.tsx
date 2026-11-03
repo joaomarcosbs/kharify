@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, useMemo } from "react"
+import { useCallback, useEffect, useState, useMemo } from "react"
 import { useParams } from "next/navigation"
 import { ColumnDef } from "@tanstack/react-table"
 import { PageHeader } from "@/components/page-header"
@@ -45,10 +45,10 @@ export default function AccountDetailPage() {
   const [categories, setCategories] = useState<Category[]>([])
   const { formatCurrency } = useFormat()
 
-  const getCategoryName = (id?: string | null) => {
+  const getCategoryName = useCallback((id?: string | null) => {
     if (!id) return "—"
     return categories.find((c) => c.id === id)?.name ?? "—"
-  }
+  }, [categories])
 
   useEffect(() => {
     async function load() {
@@ -109,7 +109,7 @@ export default function AccountDetailPage() {
         )
       },
     },
-  ], [formatCurrency])
+  ], [formatCurrency, getCategoryName])
 
   if (!account) {
     return (
@@ -165,7 +165,12 @@ export default function AccountDetailPage() {
       </div>
 
       {/* Gráfico de evolução */}
-      <AccountBalanceChart accountId={accountId} />
+      <AccountBalanceChart
+        accountId={accountId}
+        initialBalance={account.initialBalance}
+        initialBalanceDate={account.initialBalanceDate}
+        transactions={transactions}
+      />
 
       {/* Transações da conta */}
       <div className="flex flex-col gap-4">

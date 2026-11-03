@@ -1,4 +1,10 @@
+"use client"
+
 import * as React from "react"
+import { useRouter } from "next/navigation"
+import { logoutAction } from "@/app/actions/auth"
+import { useOrganizationStore } from "@/stores/organization-store"
+import { useUserStore } from "@/stores/user-store"
 import {
   ArrowDownLeft,
   ArrowLeftRight,
@@ -13,6 +19,7 @@ import {
   User,
   UserPlus,
   Settings2,
+  Tags,
 } from "lucide-react"
 
 import {
@@ -54,6 +61,11 @@ const data = {
       icon: ArrowLeftRight,
     },
     {
+      title: "Categorias",
+      url: "/categories",
+      icon: Tags,
+    },
+    {
       title: "Entradas Fixas",
       url: "/fixed-income",
       icon: ArrowDownLeft,
@@ -72,6 +84,20 @@ const data = {
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const router = useRouter()
+  const clearOrganizations = useOrganizationStore((state) => state.clearOrganizations)
+  const activeOrganization = useOrganizationStore((state) => state.activeOrganization)
+  const user = useUserStore((state) => state.user)
+  const clearUser = useUserStore((state) => state.clearUser)
+
+  const handleLogout = async () => {
+    await logoutAction()
+    clearOrganizations()
+    clearUser()
+    router.replace("/login")
+    router.refresh()
+  }
+
   return (
     <Sidebar variant="floating" collapsible="icon" {...props}>
       <SidebarHeader className="h-16 relative flex items-center bg-transparent shrink-0 p-4">
@@ -137,12 +163,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 />
               }>
                 <Avatar className="h-8 w-8 rounded-full shrink-0">
-                  <AvatarImage src="" alt="João Marcos" />
-                  <AvatarFallback className="rounded-[inherit] bg-primary/10 text-primary">JM</AvatarFallback>
+                  <AvatarImage src={user?.avatarUrl ?? undefined} alt={user?.name || "Usuário"} />
+                  <AvatarFallback className="rounded-[inherit] bg-primary/10 text-primary">
+                    {user?.name?.split(" ").map((part) => part[0]).join("").slice(0, 2).toUpperCase() || "U"}
+                  </AvatarFallback>
                 </Avatar>
                 <div className="flex flex-1 flex-col text-left text-sm leading-tight overflow-hidden">
-                  <span className="truncate font-semibold text-foreground">João Marcos</span>
-                  <span className="truncate text-xs text-muted-foreground">Admin</span>
+                  <span className="truncate font-semibold text-foreground">{user?.name || "Carregando..."}</span>
+                  <span className="truncate text-xs text-muted-foreground">{activeOrganization?.userRole || "Usuário"}</span>
                 </div>
                 <ChevronRight className="ml-auto size-4 text-muted-foreground shrink-0" />
               </DropdownMenuTrigger>
@@ -174,7 +202,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   Preferências
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem className="cursor-pointer gap-2 text-red-400 focus:text-red-400">
+                <DropdownMenuItem className="cursor-pointer gap-2 text-red-400 focus:text-red-400" onClick={handleLogout}>
                   <LogOut className="size-4" />
                   Sair da Conta
                 </DropdownMenuItem>

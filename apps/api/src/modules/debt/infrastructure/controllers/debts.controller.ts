@@ -1,6 +1,18 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Body,
+  Param,
+} from '@nestjs/common';
 import { DebtsService } from '../../application/debts.service';
-import { CreateDebtDto, UpdateDebtDto, SimulateDebtDto } from '../../application/dto/debt.dto';
+import {
+  CreateDebtDto,
+  UpdateDebtDto,
+  SimulateDebtDto,
+} from '../../application/dto/debt.dto';
 import { OrganizationId } from '../../../../common/decorators/organization.decorator';
 import { Roles } from '../../../../common/decorators/roles.decorator';
 import { UserRole } from '@prisma/client';
@@ -27,7 +39,11 @@ export class DebtsController {
 
   @Roles(UserRole.owner, UserRole.gestor)
   @Patch(':id')
-  update(@OrganizationId() orgId: string, @Param('id') id: string, @Body() dto: UpdateDebtDto) {
+  update(
+    @OrganizationId() orgId: string,
+    @Param('id') id: string,
+    @Body() dto: UpdateDebtDto,
+  ) {
     return this.debtsService.update(orgId, id, dto);
   }
 
@@ -38,7 +54,11 @@ export class DebtsController {
   }
 
   @Post(':id/simulate')
-  simulate(@OrganizationId() orgId: string, @Param('id') id: string, @Body() dto: SimulateDebtDto) {
+  simulate(
+    @OrganizationId() orgId: string,
+    @Param('id') id: string,
+    @Body() dto: SimulateDebtDto,
+  ) {
     return this.debtsService.simulate(orgId, id, dto);
   }
 }

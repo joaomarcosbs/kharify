@@ -167,6 +167,15 @@ npm run dev
 
 Open http://localhost:3000.
 
+To populate the local installation with data for screenshots and README illustrations, run the demo seed from the API directory after applying the migrations:
+
+```bash
+cd apps/api
+npm run prisma:seed
+```
+
+It creates the `Oliveira & Família` demo organization with accounts, categories, transactions, bills, a debt, a sandbox Open Finance item, and audit records. Demo login: `demo@kharify.local` / `Kharify123!`. These credentials are for local development only.
+
 ## Configuration
 
 | Variable | Component | Required | Purpose |
@@ -192,13 +201,14 @@ See the [technical reference](docs/reference.md) for web routes, API endpoint gr
 
 ## Current limitations and roadmap
 
-The following areas are not fully implemented yet:
+The main limitations and planned areas are:
 
 - Password recovery and configurable notifications.
 - Apple login.
 - AI-assisted transaction categorization.
 - OFX/CSV statement import.
-- Some profile, organization-member, and preference flows remain partial or locally persisted in the web client.
+- Organization member registration does not send e-mail automatically: an administrator creates the member and shares the generated initial password manually. The member can change it later from the profile page.
+- Appearance and notification preferences are persisted locally in the browser.
 - More integration and end-to-end test coverage.
 
 ## Contributing

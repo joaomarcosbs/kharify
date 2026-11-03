@@ -1,6 +1,17 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+} from '@nestjs/common';
 import { CategoriesService } from '../../application/categories.service';
-import { CreateCategoryDto, UpdateCategoryDto } from '../../application/dto/category.dto';
+import {
+  CreateCategoryDto,
+  UpdateCategoryDto,
+} from '../../application/dto/category.dto';
 import { OrganizationId } from '../../../../common/decorators/organization.decorator';
 import { Roles } from '../../../../common/decorators/roles.decorator';
 import { UserRole } from '@prisma/client';
@@ -11,7 +22,10 @@ export class CategoriesController {
 
   @Roles(UserRole.owner, UserRole.gestor)
   @Post()
-  create(@OrganizationId() orgId: string, @Body() createCategoryDto: CreateCategoryDto) {
+  create(
+    @OrganizationId() orgId: string,
+    @Body() createCategoryDto: CreateCategoryDto,
+  ) {
     return this.categoriesService.create(orgId, createCategoryDto);
   }
 
@@ -27,7 +41,11 @@ export class CategoriesController {
 
   @Roles(UserRole.owner, UserRole.gestor)
   @Patch(':id')
-  update(@OrganizationId() orgId: string, @Param('id') id: string, @Body() updateCategoryDto: UpdateCategoryDto) {
+  update(
+    @OrganizationId() orgId: string,
+    @Param('id') id: string,
+    @Body() updateCategoryDto: UpdateCategoryDto,
+  ) {
     return this.categoriesService.update(orgId, id, updateCategoryDto);
   }
 

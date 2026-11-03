@@ -26,13 +26,18 @@ describe('PluggyService', () => {
     },
     account: {
       findFirst: jest.fn().mockResolvedValue(null),
-      create: jest.fn().mockResolvedValue({ id: 'acc-1', name: 'Nubank Conta Corrente' }),
+      create: jest
+        .fn()
+        .mockResolvedValue({ id: 'acc-1', name: 'Nubank Conta Corrente' }),
       update: jest.fn().mockResolvedValue({ id: 'acc-1' }),
       updateMany: jest.fn().mockResolvedValue({ count: 1 }),
     },
     transaction: {
       findFirst: jest.fn().mockResolvedValue(null),
       create: jest.fn().mockResolvedValue({ id: 'tx-1' }),
+    },
+    get rls() {
+      return this;
     },
   };
 
@@ -84,7 +89,10 @@ describe('PluggyService', () => {
   describe('handleWebhook', () => {
     it('deve atualizar o status do item ao receber evento de webhook', async () => {
       mockPrisma.pluggyItem.findUnique.mockResolvedValueOnce(mockItem);
-      mockPrisma.pluggyItem.update.mockResolvedValueOnce({ ...mockItem, status: 'UPDATED' });
+      mockPrisma.pluggyItem.update.mockResolvedValueOnce({
+        ...mockItem,
+        status: 'UPDATED',
+      });
 
       const res = await service.handleWebhook({
         event: 'item/updated',

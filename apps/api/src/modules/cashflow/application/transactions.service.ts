@@ -1,6 +1,13 @@
-import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../../../common/prisma/prisma.service';
-import { CreateTransactionDto, UpdateTransactionDto } from './dto/transaction.dto';
+import {
+  CreateTransactionDto,
+  UpdateTransactionDto,
+} from './dto/transaction.dto';
 import { Prisma } from '@prisma/client';
 
 @Injectable()
@@ -9,7 +16,9 @@ export class TransactionsService {
 
   async create(organizationId: string, dto: CreateTransactionDto) {
     if (dto.type === 'transferencia' && !dto.accountIdDest) {
-      throw new BadRequestException('Transfer transactions require an accountIdDest');
+      throw new BadRequestException(
+        'Transfer transactions require an accountIdDest',
+      );
     }
     if (dto.type === 'transferencia' && dto.accountId === dto.accountIdDest) {
       throw new BadRequestException('Cannot transfer to the same account');
@@ -85,50 +94,73 @@ export class TransactionsService {
     });
   }
 
-  private async validateRelations(organizationId: string, dto: CreateTransactionDto) {
+  private async validateRelations(
+    organizationId: string,
+    dto: CreateTransactionDto,
+  ) {
     const acc = await this.prisma.rls.account.findFirst({
       where: { id: dto.accountId, organizationId },
     });
-    if (!acc) throw new BadRequestException('Source account not found in this organization');
+    if (!acc)
+      throw new BadRequestException(
+        'Source account not found in this organization',
+      );
 
     if (dto.accountIdDest) {
       const accDest = await this.prisma.rls.account.findFirst({
         where: { id: dto.accountIdDest, organizationId },
       });
-      if (!accDest) throw new BadRequestException('Destination account not found in this organization');
+      if (!accDest)
+        throw new BadRequestException(
+          'Destination account not found in this organization',
+        );
     }
 
     if (dto.categoryId) {
       const cat = await this.prisma.rls.category.findFirst({
         where: { id: dto.categoryId, organizationId },
       });
-      if (!cat) throw new BadRequestException('Category not found in this organization');
+      if (!cat)
+        throw new BadRequestException(
+          'Category not found in this organization',
+        );
     }
 
     if (dto.costCenterId) {
       const cc = await this.prisma.rls.costCenter.findFirst({
         where: { id: dto.costCenterId, organizationId },
       });
-      if (!cc) throw new BadRequestException('Cost center not found in this organization');
+      if (!cc)
+        throw new BadRequestException(
+          'Cost center not found in this organization',
+        );
     }
 
     if (dto.billId) {
       const bill = await this.prisma.rls.bill.findFirst({
         where: { id: dto.billId, organizationId },
       });
-      if (!bill) throw new BadRequestException('Bill not found in this organization');
+      if (!bill)
+        throw new BadRequestException('Bill not found in this organization');
     }
 
     if (dto.debtId) {
       const debt = await this.prisma.rls.debt.findFirst({
         where: { id: dto.debtId, organizationId },
       });
-      if (!debt) throw new BadRequestException('Debt not found in this organization');
+      if (!debt)
+        throw new BadRequestException('Debt not found in this organization');
     }
   }
 
-  private async updateBillStatus(tx: Prisma.TransactionClient, organizationId: string, billId: string) {
-    const bill = await tx.bill.findFirst({ where: { id: billId, organizationId } });
+  private async updateBillStatus(
+    tx: Prisma.TransactionClient,
+    organizationId: string,
+    billId: string,
+  ) {
+    const bill = await tx.bill.findFirst({
+      where: { id: billId, organizationId },
+    });
     if (!bill) return;
 
     const aggregate = await tx.transaction.aggregate({

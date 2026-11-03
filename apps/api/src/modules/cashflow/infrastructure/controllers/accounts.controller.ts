@@ -1,6 +1,17 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+} from '@nestjs/common';
 import { AccountsService } from '../../application/accounts.service';
-import { CreateAccountDto, UpdateAccountDto } from '../../application/dto/account.dto';
+import {
+  CreateAccountDto,
+  UpdateAccountDto,
+} from '../../application/dto/account.dto';
 import { OrganizationId } from '../../../../common/decorators/organization.decorator';
 import { Roles } from '../../../../common/decorators/roles.decorator';
 import { UserRole } from '@prisma/client';
@@ -11,7 +22,10 @@ export class AccountsController {
 
   @Roles(UserRole.owner, UserRole.gestor)
   @Post()
-  create(@OrganizationId() orgId: string, @Body() createAccountDto: CreateAccountDto) {
+  create(
+    @OrganizationId() orgId: string,
+    @Body() createAccountDto: CreateAccountDto,
+  ) {
     return this.accountsService.create(orgId, createAccountDto);
   }
 
@@ -27,7 +41,11 @@ export class AccountsController {
 
   @Roles(UserRole.owner, UserRole.gestor)
   @Patch(':id')
-  update(@OrganizationId() orgId: string, @Param('id') id: string, @Body() updateAccountDto: UpdateAccountDto) {
+  update(
+    @OrganizationId() orgId: string,
+    @Param('id') id: string,
+    @Body() updateAccountDto: UpdateAccountDto,
+  ) {
     return this.accountsService.update(orgId, id, updateAccountDto);
   }
 

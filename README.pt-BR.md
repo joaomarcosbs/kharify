@@ -167,6 +167,15 @@ npm run dev
 
 Acesse http://localhost:3000.
 
+Para preencher a instalação local com dados para capturas de tela e ilustrações do README, execute o seed de demonstração na pasta da API depois de aplicar as migrações:
+
+```bash
+cd apps/api
+npm run prisma:seed
+```
+
+Ele cria a organização de demonstração `Oliveira & Família` com contas, categorias, lançamentos, contas a pagar/receber, uma dívida, um item Open Finance sandbox e registros de auditoria. Login de demonstração: `demo@kharify.local` / `Kharify123!`. Essas credenciais são apenas para desenvolvimento local.
+
 ## Configuração
 
 | Variável | Componente | Obrigatória | Finalidade |
@@ -192,13 +201,14 @@ Consulte a [referência técnica](docs/reference.md) para rotas web, grupos de e
 
 ## Limitações atuais e roadmap
 
-As áreas abaixo ainda não estão totalmente implementadas:
+As principais limitações e próximos incrementos são:
 
 - Recuperação de senha e notificações configuráveis.
 - Login com Apple.
 - Categorização de transações com auxílio de IA.
 - Importação de extratos OFX/CSV.
-- Alguns fluxos de perfil, membros da organização e preferências ainda são parciais ou ficam armazenados localmente no cliente web.
+- O cadastro de membros da organização não envia e-mail automaticamente: um administrador cria o membro e compartilha manualmente a senha inicial gerada. O membro pode alterá-la depois na tela de perfil.
+- As preferências de aparência e notificações são armazenadas localmente no navegador.
 - Maior cobertura de testes de integração e end-to-end.
 
 ## Contribuição

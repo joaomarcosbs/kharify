@@ -1,7 +1,16 @@
-import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  Logger,
+} from '@nestjs/common';
 import { PrismaService } from '../../../common/prisma/prisma.service';
 import { RegisterPluggyItemDto } from './dto/pluggy.dto';
-import { AccountType, TransactionType, TransactionOrigin } from '@prisma/client';
+import {
+  AccountType,
+  TransactionType,
+  TransactionOrigin,
+} from '@prisma/client';
 import axios from 'axios';
 
 @Injectable()
@@ -19,7 +28,9 @@ export class PluggyService {
       if (process.env.NODE_ENV === 'production') {
         throw new Error('Pluggy credentials are not configured in production');
       }
-      this.logger.warn('Using mock sandbox Pluggy API key because credentials are not set');
+      this.logger.warn(
+        'Using mock sandbox Pluggy API key because credentials are not set',
+      );
       return 'mock-sandbox-pluggy-key';
     }
 
@@ -52,11 +63,13 @@ export class PluggyService {
       const response = await axios.post(
         `${this.baseUrl}/connect_token`,
         { clientUserId: organizationId },
-        { headers: { 'X-API-KEY': apiKey } }
+        { headers: { 'X-API-KEY': apiKey } },
       );
       return response.data;
     } catch (err: any) {
-      throw new BadRequestException(`Pluggy connect token generation failed: ${err.message}`);
+      throw new BadRequestException(
+        `Pluggy connect token generation failed: ${err.message}`,
+      );
     }
   }
 
@@ -66,7 +79,10 @@ export class PluggyService {
 
     const apiKey = await this.getPluggyApiKey();
 
-    if ((!connectorId || !connectorName) && apiKey !== 'mock-sandbox-pluggy-key') {
+    if (
+      (!connectorId || !connectorName) &&
+      apiKey !== 'mock-sandbox-pluggy-key'
+    ) {
       try {
         const resp = await axios.get(`${this.baseUrl}/items/${dto.itemId}`, {
           headers: { 'X-API-KEY': apiKey },
@@ -74,7 +90,9 @@ export class PluggyService {
         connectorId = resp.data?.connector?.id ?? connectorId;
         connectorName = resp.data?.connector?.name ?? connectorName;
       } catch (err: any) {
-        this.logger.warn(`Could not fetch connector metadata from Pluggy: ${err.message}`);
+        this.logger.warn(
+          `Could not fetch connector metadata from Pluggy: ${err.message}`,
+        );
       }
     }
 
@@ -83,7 +101,7 @@ export class PluggyService {
       connectorId = connectorId || 1;
     }
 
-    const item = await this.prisma.pluggyItem.upsert({
+    const item = await this.prisma.rls.pluggyItem.upsert({
       where: { pluggyItemId: dto.itemId },
       create: {
         organizationId,
@@ -106,14 +124,16 @@ export class PluggyService {
     try {
       await this.syncItem(organizationId, dto.itemId);
     } catch (err: any) {
-      this.logger.warn(`Initial sync failed for item ${dto.itemId}: ${err.message}`);
+      this.logger.warn(
+        `Initial sync failed for item ${dto.itemId}: ${err.message}`,
+      );
     }
 
     return item;
   }
 
   async syncItem(organizationId: string, pluggyItemId: string) {
-    const item = await this.prisma.pluggyItem.findFirst({
+    const item = await this.prisma.rls.pluggyItem.findFirst({
       where: { pluggyItemId, organizationId },
     });
 
@@ -129,9 +149,12 @@ export class PluggyService {
 
     try {
       // 1. Fetch normalized accounts from Pluggy
-      const accountsResp = await axios.get(`${this.baseUrl}/accounts?itemId=${pluggyItemId}`, {
-        headers: { 'X-API-KEY': apiKey },
-      });
+      const accountsResp = await axios.get(
+        `${this.baseUrl}/accounts?itemId=${pluggyItemId}`,
+        {
+          headers: { 'X-API-KEY': apiKey },
+        },
+      );
 
       const rawAccounts = accountsResp.data?.results ?? accountsResp.data;
       const pluggyAccounts = Array.isArray(rawAccounts) ? rawAccounts : [];
@@ -147,14 +170,15 @@ export class PluggyService {
         }
 
         // Upsert account in Kharify
-        let localAccount = await this.prisma.account.findFirst({
+        let localAccount = await this.prisma.rls.account.findFirst({
           where: { pluggyAccountId: pAcc.id },
         });
 
-        const accountName = pAcc.name || `${item.connectorName} ${pAcc.number || ''}`.trim();
+        const accountName =
+          pAcc.name || `${item.connectorName} ${pAcc.number || ''}`.trim();
 
         if (!localAccount) {
-          localAccount = await this.prisma.account.create({
+          localAccount = await this.prisma.rls.account.create({
             data: {
               organizationId,
               name: accountName,
@@ -166,7 +190,7 @@ export class PluggyService {
             },
           });
         } else {
-          localAccount = await this.prisma.account.update({
+          localAccount = await this.prisma.rls.account.update({
             where: { id: localAccount.id },
             data: {
               pluggyItemId: pluggyItemId,
@@ -178,7 +202,7 @@ export class PluggyService {
         // 2. Fetch normalized transactions for this account
         const txResp = await axios.get(
           `${this.baseUrl}/transactions?accountId=${pAcc.id}&pageSize=500`,
-          { headers: { 'X-API-KEY': apiKey } }
+          { headers: { 'X-API-KEY': apiKey } },
         );
 
         const rawTx = txResp.data?.results ?? txResp.data;
@@ -186,18 +210,21 @@ export class PluggyService {
 
         for (const pTx of pluggyTransactions) {
           // Check for existing transaction using unique pluggyTransactionId
-          const existingTx = await this.prisma.transaction.findFirst({
+          const existingTx = await this.prisma.rls.transaction.findFirst({
             where: { pluggyTransactionId: pTx.id },
           });
 
           const txType: TransactionType =
-            pTx.type === 'DEBIT' ? TransactionType.saida : TransactionType.entrada;
+            pTx.type === 'DEBIT'
+              ? TransactionType.saida
+              : TransactionType.entrada;
           const txAmount = Math.abs(Number(pTx.amount || 0));
           const txDate = pTx.date ? new Date(pTx.date) : new Date();
-          const txDesc = pTx.description || pTx.rawDescription || 'Transação Open Finance';
+          const txDesc =
+            pTx.description || pTx.rawDescription || 'Transação Open Finance';
 
           if (!existingTx) {
-            await this.prisma.transaction.create({
+            await this.prisma.rls.transaction.create({
               data: {
                 organizationId,
                 accountId: localAccount.id,
@@ -215,7 +242,7 @@ export class PluggyService {
       }
 
       // Update item status and timestamp
-      await this.prisma.pluggyItem.update({
+      await this.prisma.rls.pluggyItem.update({
         where: { id: item.id },
         data: {
           status: 'UPDATED',
@@ -230,23 +257,25 @@ export class PluggyService {
       };
     } catch (err: any) {
       this.logger.error(`Pluggy sync failed: ${err.message}`);
-      await this.prisma.pluggyItem.update({
+      await this.prisma.rls.pluggyItem.update({
         where: { id: item.id },
         data: { status: 'SYNC_ERROR' },
       });
-      throw new BadRequestException(`Failed to sync Pluggy data: ${err.message}`);
+      throw new BadRequestException(
+        `Failed to sync Pluggy data: ${err.message}`,
+      );
     }
   }
 
   private async syncMockSandboxItem(organizationId: string, item: any) {
     const mockAccountId = `mock-acc-${item.pluggyItemId}`;
 
-    let localAccount = await this.prisma.account.findFirst({
+    let localAccount = await this.prisma.rls.account.findFirst({
       where: { pluggyAccountId: mockAccountId },
     });
 
     if (!localAccount) {
-      localAccount = await this.prisma.account.create({
+      localAccount = await this.prisma.rls.account.create({
         data: {
           organizationId,
           name: `${item.connectorName} Conta Corrente`,
@@ -285,12 +314,12 @@ export class PluggyService {
 
     let createdCount = 0;
     for (const mockTx of mockTransactions) {
-      const exists = await this.prisma.transaction.findFirst({
+      const exists = await this.prisma.rls.transaction.findFirst({
         where: { pluggyTransactionId: mockTx.id },
       });
 
       if (!exists) {
-        await this.prisma.transaction.create({
+        await this.prisma.rls.transaction.create({
           data: {
             organizationId,
             accountId: localAccount.id,
@@ -306,7 +335,7 @@ export class PluggyService {
       }
     }
 
-    await this.prisma.pluggyItem.update({
+    await this.prisma.rls.pluggyItem.update({
       where: { id: item.id },
       data: {
         status: 'UPDATED',
@@ -323,7 +352,7 @@ export class PluggyService {
   }
 
   async syncItemById(organizationId: string, id: string) {
-    const item = await this.prisma.pluggyItem.findFirst({
+    const item = await this.prisma.rls.pluggyItem.findFirst({
       where: { id, organizationId },
     });
 
@@ -336,14 +365,15 @@ export class PluggyService {
 
   async handleWebhook(payload: any) {
     const { event, itemId, data } = payload;
-    if (!itemId) return { success: true, message: 'Ignored payload without itemId' };
+    if (!itemId)
+      return { success: true, message: 'Ignored payload without itemId' };
 
-    const existingItem = await this.prisma.pluggyItem.findUnique({
+    const existingItem = await this.prisma.rls.pluggyItem.findUnique({
       where: { pluggyItemId: itemId },
     });
 
     if (existingItem) {
-      await this.prisma.pluggyItem.update({
+      await this.prisma.rls.pluggyItem.update({
         where: { id: existingItem.id },
         data: {
           status: data?.status || 'UPDATED',
@@ -358,7 +388,9 @@ export class PluggyService {
         event === 'item/created'
       ) {
         this.syncItem(existingItem.organizationId, itemId).catch((err) => {
-          this.logger.error(`Webhook auto-sync failed for item ${itemId}: ${err.message}`);
+          this.logger.error(
+            `Webhook auto-sync failed for item ${itemId}: ${err.message}`,
+          );
         });
       }
     }
@@ -367,7 +399,7 @@ export class PluggyService {
   }
 
   async getItems(organizationId: string) {
-    return this.prisma.pluggyItem.findMany({
+    return this.prisma.rls.pluggyItem.findMany({
       where: { organizationId },
       include: {
         accounts: true,
@@ -377,7 +409,7 @@ export class PluggyService {
   }
 
   async deleteItem(organizationId: string, id: string) {
-    const item = await this.prisma.pluggyItem.findFirst({
+    const item = await this.prisma.rls.pluggyItem.findFirst({
       where: { id, organizationId },
     });
 
@@ -393,18 +425,20 @@ export class PluggyService {
           headers: { 'X-API-KEY': apiKey },
         });
       } catch (err: any) {
-        this.logger.warn(`Pluggy API item deletion returned warning: ${err.message}`);
+        this.logger.warn(
+          `Pluggy API item deletion returned warning: ${err.message}`,
+        );
       }
     }
 
     // Unlink any accounts linked to this pluggyItemId
-    await this.prisma.account.updateMany({
+    await this.prisma.rls.account.updateMany({
       where: { pluggyItemId: item.pluggyItemId },
       data: { pluggyItemId: null },
     });
 
     // Delete local database item
-    await this.prisma.pluggyItem.delete({
+    await this.prisma.rls.pluggyItem.delete({
       where: { id: item.id },
     });
 

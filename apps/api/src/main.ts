@@ -14,13 +14,19 @@ async function bootstrap() {
     'http://127.0.0.1:3000',
     'http://localhost:3080',
     'http://localhost',
-    ...(process.env.FRONTEND_URL ? process.env.FRONTEND_URL.split(',').map((url) => url.trim()) : []),
+    ...(process.env.FRONTEND_URL
+      ? process.env.FRONTEND_URL.split(',').map((url) => url.trim())
+      : []),
   ];
 
   app.enableCors({
     origin: (origin, callback) => {
       // Permitir requisições sem origin (como mobile apps, curl, docker SSR) ou se estiver na lista permitida
-      if (!origin || allowedOrigins.includes(origin) || allowedOrigins.some((allowed) => origin.startsWith(allowed))) {
+      if (
+        !origin ||
+        allowedOrigins.includes(origin) ||
+        allowedOrigins.some((allowed) => origin.startsWith(allowed))
+      ) {
         callback(null, true);
         return;
       }
@@ -29,7 +35,9 @@ async function bootstrap() {
       if (process.env.NODE_ENV === 'production') {
         callback(new Error('Origin not allowed by CORS'), false);
       } else {
-        console.warn(`CORS: allowing origin ${origin} in non-production environment`);
+        console.warn(
+          `CORS: allowing origin ${origin} in non-production environment`,
+        );
         callback(null, true);
       }
     },

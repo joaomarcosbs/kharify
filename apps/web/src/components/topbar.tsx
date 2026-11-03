@@ -5,10 +5,17 @@ import { SidebarTrigger } from "@/components/ui/sidebar"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { useEffect, useState } from "react"
 import { usePrivacyStore } from "@/stores/privacy-store"
+import { useUserStore } from "@/stores/user-store"
+import { useOrganizationStore } from "@/stores/organization-store"
+import { organizationService } from "@/services/organization.service"
 
 export function Topbar() {
   const [mounted, setMounted] = useState(false)
   const [isMac, setIsMac] = useState(false)
+  const user = useUserStore((state) => state.user)
+  const fetchUser = useUserStore((state) => state.fetchUser)
+  const activeOrganization = useOrganizationStore((state) => state.activeOrganization)
+  const setActiveOrganization = useOrganizationStore((state) => state.setActiveOrganization)
   const hideBalances = usePrivacyStore((state) => state.hideBalances)
   const toggleHideBalances = usePrivacyStore((state) => state.toggleHideBalances)
   const showHidden = mounted && hideBalances
@@ -16,7 +23,18 @@ export function Topbar() {
   useEffect(() => {
     setIsMac(navigator.platform.toUpperCase().includes("MAC"))
     setMounted(true)
-  }, [])
+    void fetchUser()
+  }, [fetchUser])
+
+  useEffect(() => {
+    if (!activeOrganization?.id) return
+
+    organizationService.getActive(activeOrganization.id)
+      .then(setActiveOrganization)
+      .catch(() => undefined)
+  }, [activeOrganization?.id, setActiveOrganization])
+
+  const firstName = user?.name?.trim().split(/\s+/)[0] || "você"
 
   return (
     <header
@@ -28,7 +46,7 @@ export function Topbar() {
         <div className="flex items-center gap-4">
           <SidebarTrigger className="-ml-2 text-muted-foreground hover:text-foreground" />
           <div className="hidden md:flex flex-col">
-            <span className="text-base font-semibold leading-none mb-1 text-foreground">Olá, João</span>
+            <span className="text-base font-semibold leading-none mb-1 text-foreground">Olá, {firstName}</span>
             <span className="text-sm text-muted-foreground leading-none mt-0.5">Bem-vindo ao seu painel</span>
           </div>
         </div>

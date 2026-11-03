@@ -1,4 +1,12 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+} from '@nestjs/common';
 import { BillsService } from '../../application/bills.service';
 import { CreateBillDto, UpdateBillDto } from '../../application/dto/bill.dto';
 import { OrganizationId } from '../../../../common/decorators/organization.decorator';
@@ -27,7 +35,11 @@ export class BillsController {
 
   @Roles(UserRole.owner, UserRole.gestor)
   @Patch(':id')
-  update(@OrganizationId() orgId: string, @Param('id') id: string, @Body() dto: UpdateBillDto) {
+  update(
+    @OrganizationId() orgId: string,
+    @Param('id') id: string,
+    @Body() dto: UpdateBillDto,
+  ) {
     return this.billsService.update(orgId, id, dto);
   }
 

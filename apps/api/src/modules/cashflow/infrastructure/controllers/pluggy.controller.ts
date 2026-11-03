@@ -18,7 +18,10 @@ export class PluggyController {
 
   @Roles(UserRole.owner, UserRole.gestor, UserRole.membro)
   @Post('items')
-  registerItem(@OrganizationId() orgId: string, @Body() dto: RegisterPluggyItemDto) {
+  registerItem(
+    @OrganizationId() orgId: string,
+    @Body() dto: RegisterPluggyItemDto,
+  ) {
     return this.pluggyService.registerItem(orgId, dto);
   }
 

@@ -1,4 +1,10 @@
-import { IsNotEmpty, IsEnum, IsNumber, IsDateString, IsOptional } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsEnum,
+  IsNumber,
+  IsDateString,
+  IsOptional,
+} from 'class-validator';
 import { AccountType } from '../../domain/account.entity';
 
 export class CreateAccountDto {
